@@ -1,17 +1,31 @@
 import faust
 
+
+class Transaction(faust.Record):
+    sender_id: str
+    recipient_id: str
+    amount: float
+
+
 app = faust.App(
-    "simple-faust-app",
+    "banking-app",
     broker="localhost:9093",
-    value_serializer="raw",
+    store="memory://",
 )
 
-input_topic = app.topic("pract-task2", key_type=str, value_type=str)
 
-output_topic = app.topic("output-topic", key_type=str, value_type=str)
+transactions_topic = app.topic(
+    "transactions", key_type=str, value_type=Transaction
+)
+fraud_detection_topic = app.topic(
+    "fraud-detection", key_type=str, value_type=Transaction
+)
 
-@app.agent(input_topic)
-async def process(stream):
-    async for value in stream:
-        processed_value = f"Processed: {value}"
-        await output_topic.send(value=processed_value)
+
+@app.agent(transactions_topic)
+async def process_transactions(stream):
+    async for transaction in stream:
+        if transaction.amount > 10_000:
+            await fraud_detection_topic.send(
+                value=transaction
+            )
