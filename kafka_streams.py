@@ -2,7 +2,7 @@ import faust
 
 app = faust.App(
     "simple-faust-app",
-    broker="localhost:9092",
+    broker="localhost:9093",
     value_serializer="raw",
 )
 
