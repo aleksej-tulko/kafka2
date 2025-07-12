@@ -6,7 +6,7 @@ app = faust.App(
     value_serializer="raw",
 )
 
-input_topic = app.topic("input-topic", key_type=str, value_type=str)
+input_topic = app.topic("pract-task2", key_type=str, value_type=str)
 
 output_topic = app.topic("output-topic", key_type=str, value_type=str)
 
