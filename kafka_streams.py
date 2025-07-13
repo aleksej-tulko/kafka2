@@ -14,8 +14,11 @@ app = faust.App(
     store="rocksdb://",
 )
 
-app.send('her')
-
+table = app.Table(
+    "blocked_users",
+    partitions=3,
+    default=lambda x: x == "spammer"
+)
 
 transactions_topic = app.topic(
     "transactions", key_type=str, value_type=Transaction
