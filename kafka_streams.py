@@ -186,6 +186,7 @@ def producer_infinite_loop():
                     incr_num += 1.0
                     if incr_num % 10 == 0:
                         producer.flush()
+                    print(incr_num)
     except (KafkaException, Exception) as e:
         raise KafkaError(e)
     finally:
