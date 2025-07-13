@@ -164,24 +164,25 @@ def create_message(sender_id: int, sender_name: str,
 def producer_infinite_loop():
     """Запуска цикла для генерации сообщения."""
     incr_num: float = 0.0
-    recipient_names = [name for name in user_ids]
+    user_names = list(user_ids)
     try:
         while True:
             for sender_name, id in user_ids.items():
-                for recipient_name in recipient_names:
-                    if sender_name != recipient_name:
-                        create_message(
-                            sender_id=id,
-                            sender_name=sender_name,
-                            recipient_id=user_ids[recipient_name],
-                            recipient_name=recipient_name,
-                            amount=incr_num,
-                            content=f'{incr_num}')
-                        incr_num += 1.0
-                        if incr_num % 10 == 0:
-                            producer.flush()
-    except Exception as e:
-        raise RuntimeError(e)
+                recipients = [name for name in user_names
+                              if name != sender_name]
+                for recipient_name in recipients:
+                    create_message(
+                        sender_id=id,
+                        sender_name=sender_name,
+                        recipient_id=user_ids[recipient_name],
+                        recipient_name=recipient_name,
+                        amount=incr_num,
+                        content=f'{incr_num}')
+                    incr_num += 1.0
+                    if incr_num % 10 == 0:
+                        producer.flush()
+    except (KafkaException, Exception) as e:
+        raise KafkaError(e)
     finally:
         producer.flush()
 
