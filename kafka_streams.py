@@ -10,7 +10,7 @@ class Transaction(faust.Record):
 
 app = faust.App(
     "pract-task3",
-    broker="kafka://localhost:9093,localhost:9095,localhost:9097",
+    broker="localhost:9097",
     store="rocksdb://",
 )
 
