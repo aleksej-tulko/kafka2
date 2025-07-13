@@ -5,12 +5,13 @@ class Transaction(faust.Record):
     sender_id: str
     recipient_id: str
     amount: float
+    content: str
 
 
 app = faust.App(
-    "banking-app",
-    broker="localhost:9093",
-    store="memory://",
+    "pract-task3",
+    broker="kafka://localhost:9093,localhost:9095,localhost:9097",
+    store="rocksdb://",
 )
 
 
