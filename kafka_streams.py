@@ -27,7 +27,7 @@ SESSION_TIME_MS = os.getenv('SESSION_TIME_MS', 1_000)
 TOPIC = os.getenv('TOPIC', 'practice')
 
 schema_registry_config = {
-   'url': 'http://schema-registry:8081'
+   'url': 'http://localhost:8081'
 }
 
 json_schema_str = """
@@ -67,7 +67,7 @@ value_serializer = json_serializer
 
 conf = {
     "bootstrap.servers":
-    "kafka_1:9092,kafka_2:9094,kafka_3:9096",
+    "localhost:9093,localhost:9095,localhost:9097",
 }
 
 producer_conf = conf | {
