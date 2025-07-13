@@ -1,4 +1,6 @@
 import os
+import string
+from random import choice, choices
 from threading import Thread
 from time import sleep
 
@@ -171,13 +173,16 @@ def producer_infinite_loop():
                 recipients = [name for name in user_names
                               if name != sender_name]
                 for recipient_name in recipients:
+                    content = ''.join(
+                        choices(string.ascii_uppercase + string.digits, k=5)
+                    ) if incr_num % 10 == 0 else choice(["her", "zhopa"])
                     create_message(
                         sender_id=id,
                         sender_name=sender_name,
                         recipient_id=user_ids[recipient_name],
                         recipient_name=recipient_name,
                         amount=incr_num,
-                        content=f'{incr_num}')
+                        content=content)
                     incr_num += 1.0
                     if incr_num % 10 == 0:
                         producer.flush()
