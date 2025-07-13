@@ -51,11 +51,15 @@ blocked_users_topic = app.topic(
 @app.agent(messages_topic)
 async def filter_blocked_users(stream):
     async for message in stream:
-        for blocker in prohibited_users:
-            if message.sender_name in prohibited_users[blocker]:
-                await blocked_users_topic.send(
-                    value={
-                        "blocker": message.sender_name,
-                        "blocked": prohibited_users[blocker]
-                    }
+        sender = message.sender_name
+        recipient = message.recipient_name
+
+        if sender in prohibited_users.get(recipient, []):
+            print(f"⛔ {recipient} блокирует {sender}")
+            await filtered_messages_topic.send(
+                key=recipient,
+                value=BlockedUsers(
+                    blocker=recipient,
+                    blocked=[sender]
                 )
+            )
