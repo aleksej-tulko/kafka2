@@ -1,10 +1,81 @@
+import os
 from threading import Thread
+from time import sleep
 
 import faust
 from confluent_kafka import (
-    Consumer, KafkaError, KafkaException, Producer
+    KafkaError, KafkaException, Producer
 )
+from confluent_kafka.schema_registry import SchemaRegistryClient
+from confluent_kafka.schema_registry.json_schema import (
+    JSONDeserializer, JSONSerializer
+)
+from confluent_kafka.serialization import (
+    MessageField, SerializationContext, StringSerializer
+)
+from dotenv import load_dotenv
 
+load_dotenv()
+
+ACKS_LEVEL = os.getenv('ACKS_LEVEL', 'all')
+AUTOOFF_RESET = os.getenv('AUTOCOMMIT_RESET', 'earliest')
+ENABLE_AUTOCOMMIT = os.getenv('ENABLE_AUTOCOMMIT', False)
+FETCH_MIN_BYTES = os.getenv('FETCH_MIN_BYTES', 1)
+FETCH_WAIT_MAX_MS = os.getenv('FETCH_WAIT_MAX_MS', 100)
+RETRIES = os.getenv('RETRIES', '3')
+SESSION_TIME_MS = os.getenv('SESSION_TIME_MS', 1_000)
+TOPIC = os.getenv('TOPIC', 'practice')
+
+schema_registry_config = {
+   'url': 'http://schema-registry:8081'
+}
+
+json_schema_str = """
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Product",
+    "type": "object",
+    "properties": {
+        "sender_id": {
+            "type": "integer"
+        },
+        "sender_name": {
+            "type": "string"
+        },
+        "recipient_id": {
+            "type": "integer"
+        },
+        "recipient_name": {
+            "type": "string"
+        },
+        "amount": {
+            "type": "number"
+        },
+        "content": {
+            "type": "string"
+        }
+    },
+    "required": ["sender_id", "sender_name",\
+        "recipient_id", "recipient_name", "amount", "content"]
+}
+"""
+
+schema_registry_client = SchemaRegistryClient(schema_registry_config)
+json_serializer = JSONSerializer(json_schema_str, schema_registry_client)
+key_serializer = StringSerializer('utf_8')
+value_serializer = json_serializer
+
+conf = {
+    "bootstrap.servers":
+    "kafka_1:9092,kafka_2:9094,kafka_3:9096",
+}
+
+producer_conf = conf | {
+    "acks": ACKS_LEVEL,
+    "retries": RETRIES,
+}
+
+producer = Producer(producer_conf)
 
 prohibited_users = {
     "clown": ["spammer"],
@@ -51,10 +122,18 @@ blocked_users_topic = app.topic(
 )
 
 
+def delivery_report(err, msg) -> None:
+    """Отчет о доставке."""
+    if err is not None:
+        print(f'Сообщение не отправлено: {err}')
+    else:
+        print(f'Сообщение доставлено в {msg.topic()} [{msg.partition()}]')
+
+
 def create_message(sender_id: int, sender_name: str,
                    recipient_id: int, recipient_name: str,
                    amount: float, content: str
-) -> None:
+                   ) -> None:
     """Сериализация сообщения и отправка в брокер."""
     message_value = {
         "sender_id": sender_id,
@@ -98,3 +177,17 @@ async def process_messages(stream):
             await filtered_messages_topic.send(
                 value=message
             )
+
+
+if __name__ == '__main__':
+    """Основной код."""
+    producer_thread = Thread(
+        target=producer_infinite_loop,
+        args=(),
+        daemon=True
+    )
+    producer_thread.start()
+
+    while True:
+        print('Выполняется программа')
+        sleep(10)
