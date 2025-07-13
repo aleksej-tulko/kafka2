@@ -27,6 +27,7 @@ FETCH_WAIT_MAX_MS = os.getenv('FETCH_WAIT_MAX_MS', 100)
 RETRIES = os.getenv('RETRIES', '3')
 SESSION_TIME_MS = os.getenv('SESSION_TIME_MS', 1_000)
 TOPIC = os.getenv('TOPIC', 'practice')
+FORBIDDEN_WORDS = ["spam", "skam", "windows"]
 
 schema_registry_config = {
    'url': 'http://localhost:8081'
@@ -173,8 +174,12 @@ def producer_infinite_loop():
                 recipients = [name for name in user_names
                               if name != sender_name]
                 for recipient_name in recipients:
-                    content = choice(["her", "zhopa"]) if incr_num % 10 == 0 else ''.join(
-                        choices(string.ascii_uppercase + string.digits, k=5)
+                    content = (
+                        choice(FORBIDDEN_WORDS) if incr_num % 10 == 0
+                        else ''.join(
+                            choices(
+                                string.ascii_uppercase + string.digits, k=5)
+                        )
                     )
                     create_message(
                         sender_id=id,
@@ -186,7 +191,6 @@ def producer_infinite_loop():
                     incr_num += 1.0
                     if incr_num % 10 == 0:
                         producer.flush()
-                    print(incr_num)
     except (KafkaException, Exception) as e:
         raise KafkaError(e)
     finally:
