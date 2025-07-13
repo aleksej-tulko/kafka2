@@ -173,9 +173,9 @@ def producer_infinite_loop():
                 recipients = [name for name in user_names
                               if name != sender_name]
                 for recipient_name in recipients:
-                    content = ''.join(
+                    content = choice(["her", "zhopa"]) if incr_num % 10 == 0 else ''.join(
                         choices(string.ascii_uppercase + string.digits, k=5)
-                    ) if incr_num % 10 == 0 else choice(["her", "zhopa"])
+                    )
                     create_message(
                         sender_id=id,
                         sender_name=sender_name,
