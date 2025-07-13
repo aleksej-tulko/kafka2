@@ -1,10 +1,19 @@
 import faust
 
 
-PROHIBITED_USERS = ['spammer']
+prohibited_users = {
+    "clown": ["spammer"],
+    "spammer": ["dodik"],
+    "dodik": ["clown"]
+}
 
 
-class Transaction(faust.Record):
+class BlockedUsers(faust.Record):
+    blocker: str
+    blocked: list[str]
+
+
+class Messages(faust.Record):
     sender_id: int
     sender_name: str
     recipient_id: int
@@ -26,14 +35,14 @@ table = app.Table(
 )
 
 messages_topic = app.topic(
-    'messages', key_type=str, value_type=Transaction
+    'messages', key_type=str, value_type=Messages
 )
 filtered_messages_topic = app.topic(
-    'filtered_messages', key_type=str, value_type=Transaction
+    'filtered_messages', key_type=str, value_type=Messages
 )
 
 blocked_users_topic = app.topic(
-    'blocked_users', key_type=str, value_type=Transaction
+    'blocked_users', key_type=str, value_type=BlockedUsers
 )
 
 
