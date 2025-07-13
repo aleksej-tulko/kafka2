@@ -54,12 +54,14 @@ async def filter_blocked_users(stream):
         sender = message.sender_name
         recipient = message.recipient_name
 
-        if sender in prohibited_users.get(recipient, []):
-            print(f"⛔ {recipient} блокирует {sender}")
-            await filtered_messages_topic.send(
-                key=recipient,
-                value=BlockedUsers(
-                    blocker=recipient,
-                    blocked=[sender]
-                )
-            )
+        print(recipient)
+        print(sender)
+
+        # if sender in prohibited_users.get(recipient, []):
+        #     await filtered_messages_topic.send(
+        #         key=recipient,
+        #         value=BlockedUsers(
+        #             blocker=recipient,
+        #             blocked=[sender]
+        #         )
+        #     )
