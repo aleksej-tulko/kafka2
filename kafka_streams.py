@@ -14,6 +14,8 @@ app = faust.App(
     store="rocksdb://",
 )
 
+app.send('her')
+
 
 transactions_topic = app.topic(
     "transactions", key_type=str, value_type=Transaction
