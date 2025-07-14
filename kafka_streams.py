@@ -55,8 +55,7 @@ def blocked_users(value):
         blocker for blocker in prohibited_users
         if any(user in prohibited_users[blocker] for user in value)
     ]
-    print(blockers)
-    print(f'Заблокировано {', '.join(value)}')
+    print(f'{', '.join(blockers)} заблокировал(и) {', '.join(value)}')
 
 
 @app.agent(messages_topic, sink=[blocked_users])
