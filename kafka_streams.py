@@ -53,7 +53,7 @@ blocked_users_topic = app.topic(
 def blocked_users(value):
     blockers = [
         blocker for blocker in prohibited_users
-        if value in prohibited_users[blocker]
+        if any(user for user in value in prohibited_users[blocker])
     ]
     print(blockers)
     print(f'Заблокировано {', '.join(value)}')
