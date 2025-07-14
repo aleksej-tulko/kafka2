@@ -50,6 +50,11 @@ blocked_users_topic = app.topic(
 )
 
 
+def blocked_users(value):
+    print(f'Заблокировано {value}')
+
+
+@app.agent(sink=[blocked_users])
 @app.agent(messages_topic)
 async def filter_blocked_users(stream):
     async for message in stream:
