@@ -35,7 +35,7 @@ app = faust.App(
 table = app.Table(
     "blocked-users",
     partitions=1,
-    default=list
+    default=list(str)
 )
 
 messages_topic = app.topic(
@@ -54,10 +54,10 @@ def blocked_users(value):
     print(f'Заблокировано {value}')
 
 
-# @app.agent(sink=[blocked_users])
-@app.agent(messages_topic)
+@app.agent(messages_topic, sink=[blocked_users])
 async def filter_blocked_users(stream):
     async for message in stream:
         for senders in prohibited_users.values():
             if message.sender_name in senders:
                 table[message.recipient_name] = [sender for sender in senders]
+                yield table[message.recipient_name]
