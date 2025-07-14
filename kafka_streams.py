@@ -1,4 +1,19 @@
+from threading import Thread
+from time import sleep
+
 import faust
+
+prohibited_users = {
+    "clown": ["spammer"],
+    "spammer": ["dodik"],
+    "dodik": ["clown"]
+}
+
+
+class BlockedUsers(faust.Record):
+    blocker: str
+    blocked: list[str]
+
 
 class Messages(faust.Record):
     sender_id: int
@@ -8,29 +23,37 @@ class Messages(faust.Record):
     amount: float
     content: str
 
+
 app = faust.App(
     "pract-task3",
     broker="kafka://localhost:9093,localhost:9095,localhost:9097",
+    store="rocksdb://",
+)
+
+table = app.Table(
+    "blocked_users",
+    partitions=3,
+    default=str
 )
 
 messages_topic = app.topic(
     'messages', key_type=str, value_type=Messages
 )
+filtered_messages_topic = app.topic(
+    'filtered_messages', key_type=str, value_type=Messages
+)
+
+blocked_users_topic = app.topic(
+    'blocked_users', key_type=str, value_type=BlockedUsers
+)
+
 
 @app.agent(messages_topic)
 async def filter_blocked_users(stream):
     async for message in stream:
-        raw_value = message._raw_value  # байты сообщения
-        
-        # Обрезаем первые 4 байта (примерно, подогнать можно)
-        json_bytes = raw_value[4:]  
-        json_str = json_bytes.decode('utf-8')
-        print("Raw JSON:", json_str)
-        
-        # Попробуем вручную распарсить
-        import json
-        try:
-            data = json.loads(json_str)
-            print("Parsed data:", data)
-        except Exception as e:
-            print("Ошибка парсинга:", e)
+        for senders in prohibited_users.values():
+            print(senders)
+            # if message.sender_name in senders:
+            #     await filtered_messages_topic.send(
+            #         value=message
+            #     )
