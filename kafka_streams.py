@@ -56,7 +56,7 @@ def blocked_users(value):
         if value in prohibited_users[blocker]
     ]
     print(blockers)
-    print(f'Заблокировано {value.split(', ')}')
+    print(f'Заблокировано {value.join(', ')}')
 
 
 @app.agent(messages_topic, sink=[blocked_users])
