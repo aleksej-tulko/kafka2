@@ -50,12 +50,11 @@ blocked_users_topic = app.topic(
 )
 
 
-async def blocked_users(blocked):
+def blocked_users(blocked):
     blockers = [
         blocker for blocker in prohibited_users
         if all(user in prohibited_users[blocker] for user in blocked)
     ]
-    await sleep(10)
     print(f'{', '.join(blockers)} заблокировал(и) {', '.join(blocked)}')
 
 
@@ -66,4 +65,4 @@ async def filter_blocked_users(stream):
         if message.sender_name in blocked_users:
             await blocked_users_topic.send(value=message)
             table[message.recipient_name] = blocked_users
-            yield table[message.recipient_name]
+        yield table[message.recipient_name]
