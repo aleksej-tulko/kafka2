@@ -39,14 +39,14 @@ table = app.Table(
 )
 
 messages_topic = app.topic(
-    'messages', key_type=str, value_type=Messages
+    'messages', key_type=str, value_type=Messages, partitions=1
 )
 filtered_messages_topic = app.topic(
-    'filtered_messages', key_type=str, value_type=Messages
+    'filtered_messages', key_type=str, value_type=Messages, partitions=1
 )
 
 blocked_users_topic = app.topic(
-    'blocked_users', key_type=str, value_type=BlockedUsers
+    'blocked_users', key_type=str, value_type=BlockedUsers, partitions=1
 )
 
 
