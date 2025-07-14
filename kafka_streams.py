@@ -50,12 +50,13 @@ blocked_users_topic = app.topic(
 )
 
 
-def blocked_users(value):
+async def blocked_users(blocked):
     blockers = [
         blocker for blocker in prohibited_users
-        if all(user in prohibited_users[blocker] for user in value)
+        if all(user in prohibited_users[blocker] for user in blocked)
     ]
-    print(f'{', '.join(blockers)} заблокировал(и) {', '.join(value)}')
+    await sleep(10)
+    print(f'{', '.join(blockers)} заблокировал(и) {', '.join(blocked)}')
 
 
 @app.agent(messages_topic, sink=[blocked_users])
