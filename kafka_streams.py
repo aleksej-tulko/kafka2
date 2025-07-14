@@ -51,9 +51,9 @@ blocked_users_topic = app.topic(
 
 
 def blocked_users(value):
-    bloker = value.recipient_name
-    blocked = prohibited_users[bloker]
-    print(f'{bloker} заблокировал {[user for user in blocked].split(',')}')
+    blockers = [blocker for blocker in prohibited_users if value in prohibited_users[blocker]]
+    print(blockers)
+    print(f'Заблокировано {value}')
 
 
 @app.agent(messages_topic, sink=[blocked_users])
@@ -62,4 +62,4 @@ async def filter_blocked_users(stream):
         for senders in prohibited_users.values():
             if message.sender_name in senders:
                 table[message.recipient_name] = [sender for sender in senders]
-                yield table
+                yield table[message.recipient_name]
