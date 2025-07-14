@@ -54,6 +54,4 @@ async def filter_blocked_users(stream):
     async for message in stream:
         for senders in prohibited_users.values():
             if message.sender_name in senders:
-                await filtered_messages_topic.send(
-                    value=message
-                )
+                table[message.recipient] = [sender for sender in senders]
