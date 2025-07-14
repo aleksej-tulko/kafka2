@@ -65,4 +65,4 @@ async def filter_blocked_users(stream):
         if message.sender_name in blocked_users:
             await blocked_users_topic.send(value=message)
             table[message.recipient_name] = blocked_users
-        yield table[message.recipient_name]
+    yield table[message.recipient_name]
