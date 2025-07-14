@@ -29,11 +29,12 @@ app = faust.App(
     "pract-task3",
     broker="kafka://localhost:9093,localhost:9095,localhost:9097",
     store="rocksdb://",
+
 )
 
 table = app.Table(
     "blocked_users",
-    partitions=3,
+    partitions=1,
     default=str
 )
 
