@@ -60,9 +60,12 @@ def blocked_users(blocked):
 
 @app.agent(messages_topic, sink=[blocked_users])
 async def filter_blocked_users(stream):
+    count = 0
     async for message in stream:
         blocked_users = prohibited_users[message.recipient_name]
         if message.sender_name in blocked_users:
             await blocked_users_topic.send(value=message)
             table[message.recipient_name] = blocked_users
-        yield table[message.recipient_name] if message.offset % 100 else "Running"
+        count += 1
+        if count % 100 == 0:
+            yield table[message.recipient_name]
