@@ -26,14 +26,14 @@ class Messages(faust.Record):
 
 
 app = faust.App(
-    "pract-task3",
+    "pract-task-3",
     broker="kafka://localhost:9093,localhost:9095,localhost:9097",
     store="rocksdb://",
 
 )
 
 table = app.Table(
-    "blocked_users",
+    "blocked-users",
     partitions=1,
     default=str
 )
