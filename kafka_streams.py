@@ -67,5 +67,5 @@ async def filter_blocked_users(stream):
             await blocked_users_topic.send(value=message)
             table[message.recipient_name] = blocked_users
         count += 1
-        if count % 100 == 0:
+        if count % 10000 == 0:
             yield table[message.recipient_name]
