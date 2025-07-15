@@ -50,7 +50,7 @@ blocked_users_topic = app.topic(
 )
 
 
-def output_blocked_users(blocked):
+def output_blocked_users_from_db(blocked):
     blocker_to_blocked = {}
 
     for blocker, blocked_list in prohibited_users.items():
@@ -62,7 +62,7 @@ def output_blocked_users(blocked):
         print(f"{blocker} заблокировал(а) {', '.join(blocked_users)}")
 
 
-@app.agent(messages_topic, sink=[output_blocked_users])
+@app.agent(messages_topic, sink=[output_blocked_users_from_db])
 async def filter_blocked_users(stream):
     count = 0
     async for message in stream:
