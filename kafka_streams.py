@@ -50,7 +50,7 @@ blocked_users_topic = app.topic(
 )
 
 
-def blocked_users(blocked):
+def output_blocked_users(blocked):
     blockers = [
         blocker for blocker in prohibited_users
         if all(user in prohibited_users[blocker] for user in blocked)
@@ -59,7 +59,7 @@ def blocked_users(blocked):
 
 
 
-@app.agent(messages_topic, sink=[blocked_users])
+@app.agent(messages_topic, sink=[output_blocked_users])
 async def filter_blocked_users(stream):
     count = 0
     async for message in stream:
