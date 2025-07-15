@@ -51,11 +51,10 @@ blocked_users_topic = app.topic(
 
 
 def output_blocked_users(blocked):
-    blockers = [
-        blocker for blocker in prohibited_users
-        if all(user in prohibited_users[blocker] for user in blocked)
-    ]
-    print(f'{', '.join(blockers)} заблокировал(и) {', '.join(blocked)}')
+    for blocked_user in blocked:
+        for blocker, blocked_list in prohibited_users.items():
+            if blocked_user in blocked_list:
+                print(f'{blocker} заблокировал(а) {blocked_user}')
 
 
 
