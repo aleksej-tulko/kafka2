@@ -63,7 +63,6 @@ def output_blocked_users_from_db(blocked):
         for blocker, blocked_users in blocker_to_blocked.items():
             blocked_str = ", ".join(sorted(blocked_users))
             output_lines.append(f"{blocker} заблокировал(а): {blocked_str}")
-        
         print("\n".join(output_lines))
 
 
