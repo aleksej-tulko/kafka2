@@ -51,9 +51,13 @@ blocked_users_topic = app.topic(
 
 
 def output_blocked_users(blocked):
+    blocked_map = {}
     for blocked_user in blocked:
         for blocker, blocked_list in prohibited_users.items():
             if blocked_user in blocked_list:
+                if blocker not in blocked_map:
+                    blocked_map[blocker] = blocked
+                print(blocked_map)
                 print(f'{blocker} заблокировал(а) {blocked_user}')
 
 
