@@ -1,5 +1,7 @@
-import faust
+from threading import Thread
+from time import sleep
 
+import faust
 
 prohibited_users = {
     "clown": ["spammer"],
@@ -7,6 +9,11 @@ prohibited_users = {
     "dodik": ["clown"],
     "payaso": ["clown", "spammer"]
 }
+
+
+class BlockedUsers(faust.Record):
+    blocker: str
+    blocked: list[str]
 
 
 class Messages(faust.Record):
@@ -18,20 +25,24 @@ class Messages(faust.Record):
     content: str
 
 
-class BlockedUsers(faust.Record):
-    blocker: str
-    blocked: str
-
-
 app = faust.App(
     "pract-task-3",
     broker="kafka://localhost:9093,localhost:9095,localhost:9097",
     store="rocksdb://",
+
 )
 
+table = app.Table(
+    "blocked-users",
+    partitions=1,
+    default=list
+)
 
 messages_topic = app.topic(
     'messages', key_type=str, value_type=Messages, partitions=1
+)
+filtered_messages_topic = app.topic(
+    'filtered_messages', key_type=str, value_type=Messages, partitions=1
 )
 
 blocked_users_topic = app.topic(
@@ -39,18 +50,26 @@ blocked_users_topic = app.topic(
 )
 
 
-def output_blocked_users(blocked: BlockedUsers):
-    print(f'{blocked.blocker} заблокировал(а) {blocked.blocked}')
+def output_blocked_users(blocked):
+    for blocked_user in blocked:
+        for blocker, blocked_list in prohibited_users.items():
+            if blocked_user in blocked_list:
+                print(f'{blocker} заблокировал(а) {blocked_user}')
 
 
 @app.agent(messages_topic, sink=[output_blocked_users])
 async def filter_blocked_users(stream):
+    count = 0
     async for message in stream:
-        blocked_list = prohibited_users.get(message.recipient_name, [])
-        if message.sender_name in blocked_list:
+        blocked_users = prohibited_users[message.recipient_name]
+        if message.sender_name in blocked_users:
             await blocked_users_topic.send(
                 value=BlockedUsers(
                     blocker=message.recipient_name,
-                    blocked=message.sender_name
+                    blocked=[message.sender_name]
                 )
             )
+            table[message.recipient_name] = blocked_users
+        count += 1
+        if count % 1000 == 0:
+            yield table[message.recipient_name]
