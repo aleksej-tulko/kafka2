@@ -70,4 +70,5 @@ async def filter_blocked_users(stream):
         count += 1
         if count % 1000 == 0:
             print(blocked_users)
+            print(message.recipient_name)
             yield table[message.recipient_name]
