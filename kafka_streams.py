@@ -50,20 +50,16 @@ blocked_users_topic = app.topic(
 )
 
 
-def capitalize_names(message: Messages) -> Messages:
-    sender = message.sender_name.upper() if message.sender_name else message.sender_name
-    recipient = message.recipient_name.upper() if message.recipient_name else message.recipient_name
-    return Messages(
-        sender_id=message.sender_id,
-        sender_name=sender,
-        recipient_id=message.recipient_id,
-        recipient_name=recipient,
-        amount=message.amount,
-        content=message.content,
-    )
+def capitalize_names(users: Messages) -> Messages:
+    sender = users.sender_name
+    recipient = users.recipient_name
+    if sender and recipient:
+        sender = sender.upper()
+        recipient = recipient.upper()
+    return users
 
 
-processed_stream = app.stream(messages_topic)
+processed_stream = app.stream(messages_topic, processors=[capitalize_names])
 
 
 def output_blocked_users_from_db(blocked: list) -> None:
@@ -84,7 +80,7 @@ def output_blocked_users_from_db(blocked: list) -> None:
 
 @app.task
 async def filter_blocked_users():
-    # count = 0
+    count = 0
     async for message in processed_stream:
         blocked_users = prohibited_users[message.recipient_name]
         if message.sender_name in blocked_users:
@@ -95,6 +91,6 @@ async def filter_blocked_users():
                 )
             )
             table[message.recipient_name] = blocked_users
-        # count += 1
-        # if count % 1000 == 0:
-        #     yield table[message.recipient_name]
+        count += 1
+        if count % 1000 == 0:
+            yield table[message.recipient_name]
