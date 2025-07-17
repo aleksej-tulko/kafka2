@@ -98,17 +98,14 @@ async def filter_messages(stream):
 
 @app.agent(blocked_users_topic, sink=[output_blocked_users_from_db])
 async def save_blocked_to_db(stream):
-    all_blocked = [user for block_list in prohibited_users.values()
-                   for user in block_list]
     count = 0
-    async for message_batch in stream:
-        for message in message_batch:
-            if table[message.blocker]:
-                current_blocked = table[message.blocker] or []
-                new_blocked = current_blocked + message.blocked
-                table[message.blocker] = new_blocked
-            else:
-                table[message.blocker] = message.blocked
-            count += 1
+    async for message in stream:
+        if table[message.blocker]:
+            current_blocked = table[message.blocker] or []
+            new_blocked = current_blocked + message.blocked
+            table[message.blocker] = new_blocked
+        else:
+            table[message.blocker] = message.blocked
+        count += 1
         if count % 1000 == 0:
             yield table
