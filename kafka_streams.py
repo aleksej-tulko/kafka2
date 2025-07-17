@@ -73,7 +73,9 @@ current_blocked_map = defaultdict(set)
 
 @app.agent(messages_topic)
 async def filter_blocked_users(stream):
-    async for message in stream:
+    async for message in stream.filter(
+        lambda content: not regex.search(content.content)
+    ):
         blocked_users = prohibited_users.get(message.recipient_name, [])
         if message.sender_name in blocked_users:
             blocker = message.recipient_name
@@ -86,21 +88,24 @@ async def filter_blocked_users(stream):
                     blocked=list(current_blocked_map[blocker])
                 )
             )
-
-
-@app.agent(messages_topic)
-async def filter_messages(stream):
-    async for message in stream.filter(
-        lambda content: not regex.search(content.content)
-    ):
-        blocked = table[message.recipient_name]
-        if message.sender_name in blocked:
-            print(f"[DEBUG] {message.sender_name} заблокирован {message.recipient_name}, сообщение отброшено")
-            continue
-        print(message)
         await filtered_messages_topic.send(
             value=message
         )
+
+
+# @app.agent(messages_topic)
+# async def filter_messages(stream):
+#     async for message in stream.filter(
+#         lambda content: not regex.search(content.content)
+#     ):
+#         blocked = table[message.recipient_name]
+#         if message.sender_name in blocked:
+#             print(f"[DEBUG] {message.sender_name} заблокирован {message.recipient_name}, сообщение отброшено")
+#             continue
+#         print(message)
+#         await filtered_messages_topic.send(
+#             value=message
+#         )
 
 
 @app.agent(blocked_users_topic)
