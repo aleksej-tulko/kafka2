@@ -65,40 +65,19 @@ blocked_users_topic = app.topic(
 current_blocked_map = defaultdict(set)
 
 
-@app.agent(blocked_users_topic)
+def log_blocked(block_map):
+    for blocker, blocked in block_map:
+        print(f'{blocker} заблокировал: {blocked}')
+
+
+@app.agent(blocked_users_topic, sink=[log_blocked])
 async def filter_blocked_users(stream):
     async for user in stream:
         if user.blocker not in table:
             table[user.blocker] = []
         blocked_users = [blocked for blocked in user.blocked
-                             if blocked not in table[user.blocker]]
+                         if blocked not in table[user.blocker]]
         if blocked_users:
             updated_blocker = table[user.blocker] + blocked_users
             table[user.blocker] = updated_blocker
-            print(f'{user.blocker} заблокировал {blocked_users}')
-            print(f'Всего {user.blocker} заблокировал: {table[user.blocker]}')
-        blocked_users = []
-        # if message.sender_name in blocked_users:
-        #     blocker = message.recipient_name
-        #     blocked = message.sender_name
-        #     current_blocked_map[blocker].add(blocked)
-        #     await blocked_users_topic.send(
-        #         key=blocker,
-        #         value=BlockedUsers(
-        #             blocker=blocker,
-        #             blocked=list(current_blocked_map[blocker])
-        #         )
-        #     )
-        # else:
-        #     await filtered_messages_topic.send(
-        #         value=message
-        #     )
-
-
-@app.agent(blocked_users_topic)
-async def save_blocked_to_db(stream):
-    async for message in stream:
-        current_blocked = table[message.blocker] or []
-        new_blocked = list(set(current_blocked + message.blocked))
-        table[message.blocker] = new_blocked
-        yield table.items()
+            yield table.keys()
