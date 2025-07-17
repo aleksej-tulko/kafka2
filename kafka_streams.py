@@ -86,9 +86,11 @@ async def filter_blocked_users(stream):
 async def save_blocked_to_db(stream):
     all_blocked = [user for block_list in prohibited_users.values()
                    for user in block_list]
-    async for message in stream.take(
-        len(all_blocked), 10.0
+    async for message_batch in stream.take(
+        len(all_blocked) * 2, 10.0
     ):
-        print(message)
-        # table[message.blocker] = message.blocked
-        # print(table[message.blocker])
+        for message in message_batch:
+            if table[message.blocker]:
+                table[message.blocker].append(message.blocked)
+            else:
+                table[message.blocker] = message.blocked
