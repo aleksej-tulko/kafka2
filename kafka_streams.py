@@ -34,19 +34,34 @@ app = faust.App(
 
 table = app.Table(
     "blocked-users",
-    partitions=1,
+    partitions=2,
     default=list
 )
 
 messages_topic = app.topic(
-    'messages', key_type=str, value_type=Messages, partitions=1
+    'messages',
+    key_type=str,
+    value_type=Messages,
+    partitions=2,
+    replicas=2,
+    retention=10
 )
 filtered_messages_topic = app.topic(
-    'filtered_messages', key_type=str, value_type=Messages, partitions=1
+    'filtered_messages',
+    key_type=str,
+    value_type=Messages,
+    partitions=2,
+    replicas=2,
+    retention=10
 )
 
 blocked_users_topic = app.topic(
-    'blocked_users', key_type=str, value_type=BlockedUsers, partitions=1
+    'blocked_users',
+    key_type=str,
+    value_type=BlockedUsers,
+    partitions=2,
+    replicas=2,
+    retention=10
 )
 
 
@@ -64,7 +79,6 @@ def output_blocked_users_from_db(blocked):
             blocked_str = ", ".join(sorted(blocked_users))
             output_lines.append(f"{blocker} заблокировал(а): {blocked_str}")
         print("\n".join(output_lines))
-
 
 
 @app.agent(messages_topic, sink=[output_blocked_users_from_db])
