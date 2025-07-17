@@ -82,7 +82,7 @@ async def filter_blocked_users(stream):
             )
 
 
-@app.agent(blocked_users_topic)
+@app.agent(blocked_users_topic, sink=[output_blocked_users_from_db])
 async def save_blocked_to_db(stream):
     all_blocked = [user for block_list in prohibited_users.values()
                    for user in block_list]
@@ -94,3 +94,4 @@ async def save_blocked_to_db(stream):
                 table[message.blocker].append(message.blocked)
             else:
                 table[message.blocker] = message.blocked
+        yield table
