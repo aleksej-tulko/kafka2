@@ -77,8 +77,8 @@ async def filter_blocked_users(stream):
         blocked_users = prohibited_users.get(message.recipient_name, [])
         if message.sender_name in blocked_users:
             blocker = message.recipient_name
-            sender = message.sender_name
-            current_blocked_map[blocker].add(sender)
+            blocked = message.sender_name
+            current_blocked_map[blocker].add(blocked)
             await blocked_users_topic.send(
                 key=blocker,
                 value=BlockedUsers(
@@ -93,6 +93,10 @@ async def filter_messages(stream):
     async for message in stream.filter(
         lambda content: not regex.search(content.content)
     ):
+        blocked = table.get(message.recipient_name, [])
+        if message.sender_name in blocked:
+            continue
+
         await filtered_messages_topic.send(
             value=message
         )
