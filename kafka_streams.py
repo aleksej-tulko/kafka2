@@ -59,7 +59,7 @@ def capitalize_names(users: BlockedUsers) -> BlockedUsers:
     return users
 
 
-stream = app.stream(messages_topic, processors=[capitalize_names])
+processed_stream = app.stream(messages_topic, processors=[capitalize_names])
 
 
 def output_blocked_users_from_db(blocked: list) -> None:
@@ -78,7 +78,7 @@ def output_blocked_users_from_db(blocked: list) -> None:
         print("\n".join(output_lines))
 
 
-@app.agent(messages_topic, sink=[output_blocked_users_from_db])
+@app.agent(processed_stream, sink=[output_blocked_users_from_db])
 async def filter_blocked_users(stream):
     count = 0
     async for message in stream:
