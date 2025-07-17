@@ -84,13 +84,12 @@ async def filter_blocked_users():
     async for message in processed_stream:
         blocked_users = prohibited_users[message.recipient_name]
         if message.sender_name in blocked_users:
-            async for _ in blocked_users_topic.send(
+            blocked_users_topic.send(
                 value=BlockedUsers(
                     blocker=message.recipient_name,
                     blocked=[message.sender_name]
                 )
-            ):
-                continue
+            )
             table[message.recipient_name] = blocked_users
         # count += 1
         # if count % 1000 == 0:
