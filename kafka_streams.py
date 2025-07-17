@@ -1,16 +1,24 @@
 import re
 import faust
+from collections import defaultdict
 
-# --- Константы ---
-BAD_WORDS_PATTERN = r"\b(spam\w*|skam\w*|windows\w*)\b"
-regex = re.compile(BAD_WORDS_PATTERN, flags=re.IGNORECASE)
+prohibited_users = {
+    "clown": ["spammer"],
+    "spammer": ["dodik", "payaso"],
+    "dodik": ["clown"],
+    "payaso": ["clown", "spammer"]
+}
 
-# --- Faust модели ---
-class BlockedUsers(faust.Record, serializer='json'):
+bad_words_pattern = r"\b(spam\w*|skam\w*|windows\w*)\b"
+regex = re.compile(bad_words_pattern, flags=re.IGNORECASE)
+
+
+class BlockedUsers(faust.Record):
     blocker: str
     blocked: list[str]
 
-class Message(faust.Record, serializer='json'):
+
+class Messages(faust.Record):
     sender_id: int
     sender_name: str
     recipient_id: int
@@ -18,50 +26,87 @@ class Message(faust.Record, serializer='json'):
     amount: float
     content: str
 
-# --- Faust приложение ---
+
 app = faust.App(
-    "filtering-service",
+    "pract-task-3",
     broker="kafka://localhost:9093,localhost:9095,localhost:9097",
     store="rocksdb://",
 )
 
-# --- Топики ---
-messages_topic = app.topic('messages', value_type=Message)
-filtered_messages_topic = app.topic('filtered_messages', value_type=Message)
-blocked_users_topic = app.topic('blocked_users', value_type=BlockedUsers)
-
-# --- Таблица блокировок ---
-blocked_table = app.Table(
+table = app.Table(
     "blocked-users-table",
-    default=list,
     partitions=2,
-    changelog_topic=app.topic("blocked-users-changelog", value_type=BlockedUsers, partitions=2),
+    default=list,
+    changelog_topic=app.topic(
+        "blocked-users-changelog",
+        value_type=list,
+        partitions=2
+    )
 )
 
-# --- Агент для обновления таблицы блокировок ---
-@app.agent(blocked_users_topic)
-async def update_blocked_table(stream):
-    async for record in stream:
-        current = set(blocked_table[record.blocker])
-        updated = current.union(set(record.blocked))
-        blocked_table[record.blocker] = list(updated)
-        print(f"[BLOCKED_TABLE_UPDATE] {record.blocker} → {blocked_table[record.blocker]}")
 
-# --- Агент для фильтрации сообщений ---
+messages_topic = app.topic(
+    'messages',
+    key_type=str,
+    value_type=Messages
+)
+filtered_messages_topic = app.topic(
+    'filtered_messages',
+    key_type=str,
+    value_type=Messages
+)
+
+blocked_users_topic = app.topic(
+    'blocked_users',
+    key_type=str,
+    value_type=BlockedUsers
+)
+
+current_blocked_map = defaultdict(set)
+
+
+# def output_blocked_users_from_db(table_items):
+#     for blocker, blocked_list in table_items:
+#         blocked_str = ", ".join(blocked_list)
+#         print(f"{blocker} заблокировал(а): {blocked_str}")
+
+
+@app.agent(messages_topic)
+async def filter_blocked_users(stream):
+    async for message in stream:
+        blocked_users = prohibited_users.get(message.recipient_name, [])
+        if message.sender_name in blocked_users:
+            blocker = message.recipient_name
+            blocked = message.sender_name
+            current_blocked_map[blocker].add(blocked)
+            await blocked_users_topic.send(
+                key=blocker,
+                value=BlockedUsers(
+                    blocker=blocker,
+                    blocked=list(current_blocked_map[blocker])
+                )
+            )
+
+
 @app.agent(messages_topic)
 async def filter_messages(stream):
+    async for message in stream.filter(
+        lambda content: not regex.search(content.content)
+    ):
+        blocked = table[message.recipient_name]
+        if message.sender_name in blocked:
+            print(f"[DEBUG] {message.sender_name} заблокирован {message.recipient_name}, сообщение отброшено")
+            continue
+        print(message)
+        await filtered_messages_topic.send(
+            value=message
+        )
+
+
+@app.agent(blocked_users_topic)
+async def save_blocked_to_db(stream):
     async for message in stream:
-        # Фильтрация по запрещённым словам
-        if regex.search(message.content):
-            print(f"[CENSORED] Сообщение от {message.sender_name} содержит запрещённые слова")
-            continue
-
-        # Проверка блокировок
-        blocked_list = blocked_table.get(message.recipient_name, [])
-        if message.sender_name in blocked_list:
-            print(f"[BLOCKED] {message.sender_name} заблокирован {message.recipient_name}, сообщение отклонено")
-            continue
-
-        # Отправка в filtered_messages_topic
-        print(f"[PASS] {message.sender_name} → {message.recipient_name}: '{message.content}'")
-        await filtered_messages_topic.send(value=message)
+        current_blocked = table[message.blocker] or []
+        new_blocked = list(set(current_blocked + message.blocked))
+        table[message.blocker] = new_blocked
+        yield table.items()
