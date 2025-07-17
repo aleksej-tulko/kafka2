@@ -70,8 +70,8 @@ async def filter_blocked_users(stream):
     async for user in stream:
         if user.blocker not in table:
             table[user.blocker] = []
-        blocked_users = set([blocked for blocked in user.blocked
-                             if blocked not in table[user.blocker]])
+        blocked_users = [blocked for blocked in user.blocked
+                             if blocked not in table[user.blocker]]
         if blocked_users:
             updated_blocker = table[user.blocker] + blocked_users
             table[user.blocker] = updated_blocker
