@@ -54,19 +54,20 @@ blocked_users_topic = app.topic(
 
 
 def output_blocked_users_from_db(blocked):
-    blocker_to_blocked = {}
+    print(blocked)
+    # blocker_to_blocked = {}
 
-    for blocker, blocked_list in prohibited_users.items():
-        filtered_blocked = [user for user in blocked if user in blocked_list]
-        if filtered_blocked:
-            blocker_to_blocked[blocker] = filtered_blocked
+    # for blocker, blocked_list in prohibited_users.items():
+    #     filtered_blocked = [user for user in blocked if user in blocked_list]
+    #     if filtered_blocked:
+    #         blocker_to_blocked[blocker] = filtered_blocked
 
-    if blocker_to_blocked:
-        output_lines = []
-        for blocker, blocked_users in blocker_to_blocked.items():
-            blocked_str = ", ".join(sorted(blocked_users))
-            output_lines.append(f"{blocker} заблокировал(а): {blocked_str}")
-        print("\n".join(output_lines))
+    # if blocker_to_blocked:
+    #     output_lines = []
+    #     for blocker, blocked_users in blocker_to_blocked.items():
+    #         blocked_str = ", ".join(sorted(blocked_users))
+    #         output_lines.append(f"{blocker} заблокировал(а): {blocked_str}")
+    #     print("\n".join(output_lines))
 
 
 @app.agent(messages_topic)
