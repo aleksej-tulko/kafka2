@@ -63,7 +63,7 @@ def capitalize_names(message: Messages) -> Messages:
     )
 
 
-processed_stream = app.stream(messages_topic, processors=[capitalize_names])
+processed_stream = app.stream(messages_topic)
 
 
 def output_blocked_users_from_db(blocked: list) -> None:
