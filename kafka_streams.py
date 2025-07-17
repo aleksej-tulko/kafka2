@@ -65,8 +65,9 @@ blocked_users_topic = app.topic(
 current_blocked_map = defaultdict(set)
 
 
-def capitalize_name(user):
-    print(f'{user.upper()} sfddfg {table[user]}')
+def capitalize_name(data):
+    blocker, blocked_users = data
+    print(f'{blocker.upper()} заблокировал: {blocked_users}')
 
 
 @app.agent(blocked_users_topic, sink=[capitalize_name])
@@ -79,5 +80,4 @@ async def filter_blocked_users(stream):
         if blocked_users:
             updated_blocker = table[user.blocker] + blocked_users
             table[user.blocker] = updated_blocker
-            print(f'{user.blocker} заблокировал: {table[user.blocker]}')
-            yield user.blocker
+            yield (user.blocker, updated_blocker)
