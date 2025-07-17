@@ -65,33 +65,28 @@ blocked_users_topic = app.topic(
 current_blocked_map = defaultdict(set)
 
 
-# def output_blocked_users_from_db(table_items):
-#     for blocker, blocked_list in table_items:
-#         blocked_str = ", ".join(blocked_list)
-#         print(f"{blocker} заблокировал(а): {blocked_str}")
-
-
 @app.agent(messages_topic)
 async def filter_blocked_users(stream):
     async for message in stream.filter(
         lambda content: not regex.search(content.content)
     ):
-        blocked_users = prohibited_users.get(message.recipient_name, [])
-        if message.sender_name in blocked_users:
-            blocker = message.recipient_name
-            blocked = message.sender_name
-            current_blocked_map[blocker].add(blocked)
-            await blocked_users_topic.send(
-                key=blocker,
-                value=BlockedUsers(
-                    blocker=blocker,
-                    blocked=list(current_blocked_map[blocker])
-                )
-            )
-        else:
-            await filtered_messages_topic.send(
-                value=message
-            )
+        blocked_users = table.get(message.recipient_name, [])
+        print(blocked_users)
+        # if message.sender_name in blocked_users:
+        #     blocker = message.recipient_name
+        #     blocked = message.sender_name
+        #     current_blocked_map[blocker].add(blocked)
+        #     await blocked_users_topic.send(
+        #         key=blocker,
+        #         value=BlockedUsers(
+        #             blocker=blocker,
+        #             blocked=list(current_blocked_map[blocker])
+        #         )
+        #     )
+        # else:
+        #     await filtered_messages_topic.send(
+        #         value=message
+        #     )
 
 
 @app.agent(blocked_users_topic)
