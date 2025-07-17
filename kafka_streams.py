@@ -93,8 +93,10 @@ async def filter_messages(stream):
     async for message in stream.filter(
         lambda content: not regex.search(content.content)
     ):
-        blocked = table[message.recipient_nam]
+        blocked = table[message.recipient_name]
+        print(f"[DEBUG] {message.recipient_name} заблокировал: {blocked}")
         if message.sender_name in blocked:
+            print(f"[DEBUG] {message.sender_name} заблокирован, сообщение отброшено")
             continue
 
         await filtered_messages_topic.send(
