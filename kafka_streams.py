@@ -1,3 +1,5 @@
+import re
+
 import faust
 
 prohibited_users = {
@@ -6,6 +8,9 @@ prohibited_users = {
     "dodik": ["clown"],
     "payaso": ["clown", "spammer"]
 }
+
+bad_words_pattern =  r"\b(spam\w*|skam\w*|windows\w*)\b"
+regex = re.compile(bad_words_pattern, flags=re.IGNORECASE)
 
 
 class BlockedUsers(faust.Record):
@@ -80,6 +85,15 @@ async def filter_blocked_users(stream):
                     blocked=[message.sender_name]
                 )
             )
+
+@app.agent(messages_topic)
+async def filter_messages(stream):
+    async for message in stream.filter(
+        lambda content: not regex.search(content.content)
+    ):
+        await filtered_messages_topic.send(
+            value=message
+        )
 
 
 @app.agent(blocked_users_topic, sink=[output_blocked_users_from_db])
