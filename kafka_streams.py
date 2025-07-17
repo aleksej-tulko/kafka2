@@ -73,8 +73,7 @@ async def filter_blocked_users(stream):
         blocked_users = set([blocked for blocked in user.blocked
                              if blocked not in table[user.blocker]])
         if blocked_users:
-            table[user.blocker].extend(blocked_users)
-            updated_blocker = table[user.blocker]
+            updated_blocker = table[user.blocker].extend(blocked_users)
             print(f'{user.blocker} заблокировал {blocked_users}')
             print(f'Всего {user.blocker} заблокировал: {updated_blocker}')
             blocked_users = []
