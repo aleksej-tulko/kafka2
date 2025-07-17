@@ -66,7 +66,7 @@ current_blocked_map = defaultdict(set)
 
 
 def capitalize_name(user):
-    print(user.upper())
+    print(f'{user.upper()} sfddfg {table[user]}')
 
 
 @app.agent(blocked_users_topic, sink=[capitalize_name])
