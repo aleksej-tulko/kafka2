@@ -106,7 +106,9 @@ async def save_blocked_to_db(stream):
     ):
         for message in message_batch:
             if table[message.blocker]:
-                table[message.blocker].append(message.blocked)
+                current_blocked = table[message.blocker] or []
+                new_blocked = current_blocked + message.blocked
+                table[message.blocker] = new_blocked
             else:
                 table[message.blocker] = message.blocked
             count += 1
