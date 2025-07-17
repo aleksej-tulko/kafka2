@@ -51,7 +51,11 @@ blocked_users_topic = app.topic(
 
 
 def capitalize_names(users: BlockedUsers) -> BlockedUsers:
-    print(users)
+    sender = users.sender_name
+    recipient = users.recipient_name
+    if sender and recipient:
+        sender = sender.upper()
+        recipient = recipient.upper()
     return users
 
 
