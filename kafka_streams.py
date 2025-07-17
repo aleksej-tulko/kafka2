@@ -37,7 +37,11 @@ table = app.Table(
     "blocked-users-table",
     partitions=2,
     default=list,
-    changelog_topic=app.topic("blocked-users-changelog", value_type=BlockedUsers)
+    changelog_topic=app.topic(
+        "blocked-users-changelog",
+        value_type=BlockedUsers,
+        partitions=2
+    )
 )
 
 
