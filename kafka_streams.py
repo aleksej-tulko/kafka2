@@ -69,7 +69,7 @@ current_blocked_map = defaultdict(set)
 async def filter_blocked_users(stream):
     async for user in stream:
         for blocked_user in user.blocked:
-            if blocked_user not in table[user.blocker]:
+            if blocked_user not in table[user.blocker] or user.blocker not in table:
                 print(f'{user.blocker} заблокировал {user.blocked}')
         # if message.sender_name in blocked_users:
         #     blocker = message.recipient_name
