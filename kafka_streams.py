@@ -1,6 +1,6 @@
 import re
-
 import faust
+from collections import defaultdict
 
 prohibited_users = {
     "clown": ["spammer"],
@@ -9,7 +9,7 @@ prohibited_users = {
     "payaso": ["clown", "spammer"]
 }
 
-bad_words_pattern =  r"\b(spam\w*|skam\w*|windows\w*)\b"
+bad_words_pattern = r"\b(spam\w*|skam\w*|windows\w*)\b"
 regex = re.compile(bad_words_pattern, flags=re.IGNORECASE)
 
 
@@ -31,7 +31,6 @@ app = faust.App(
     "pract-task-3",
     broker="kafka://localhost:9093,localhost:9095,localhost:9097",
     store="rocksdb://",
-
 )
 
 table = app.Table(
@@ -57,6 +56,8 @@ blocked_users_topic = app.topic(
     value_type=BlockedUsers
 )
 
+current_blocked_map = defaultdict(set)
+
 
 def output_blocked_users_from_db(blocked):
     blocker_to_blocked = {}
@@ -77,14 +78,19 @@ def output_blocked_users_from_db(blocked):
 @app.agent(messages_topic)
 async def filter_blocked_users(stream):
     async for message in stream:
-        blocked_users = prohibited_users[message.recipient_name]
+        blocked_users = prohibited_users.get(message.recipient_name, [])
         if message.sender_name in blocked_users:
+            blocker = message.recipient_name
+            sender = message.sender_name
+            current_blocked_map[blocker].add(sender)
             await blocked_users_topic.send(
+                key=blocker,
                 value=BlockedUsers(
-                    blocker=message.recipient_name,
-                    blocked=[message.sender_name]
+                    blocker=blocker,
+                    blocked=list(current_blocked_map[blocker])
                 )
             )
+
 
 @app.agent(messages_topic)
 async def filter_messages(stream):
@@ -102,7 +108,7 @@ async def save_blocked_to_db(stream):
     async for message in stream:
         if table[message.blocker]:
             current_blocked = table[message.blocker] or []
-            new_blocked = current_blocked + message.blocked
+            new_blocked = list(set(current_blocked + message.blocked))
             table[message.blocker] = new_blocked
         else:
             table[message.blocker] = message.blocked
