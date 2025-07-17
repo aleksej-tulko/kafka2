@@ -50,16 +50,16 @@ blocked_users_topic = app.topic(
 )
 
 
-# def capitalize_names(users: BlockedUsers) -> BlockedUsers:
-#     sender = users.sender_name
-#     recipient = users.recipient_name
-#     if sender and recipient:
-#         sender = sender.upper()
-#         recipient = recipient.upper()
-#     return users
+def capitalize_names(users: BlockedUsers) -> BlockedUsers:
+    sender = users.sender_name
+    recipient = users.recipient_name
+    if sender and recipient:
+        sender = sender.upper()
+        recipient = recipient.upper()
+    return users
 
 
-# stream = app.stream(messages_topic, processors=[capitalize_names])
+stream = app.stream(messages_topic, processors=[capitalize_names])
 
 
 def output_blocked_users_from_db(blocked: list) -> None:
