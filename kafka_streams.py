@@ -84,8 +84,6 @@ async def filter_blocked_users(stream):
 
 @app.agent(blocked_users_topic)
 async def save_blocked_to_db(stream):
-    async for message in stream.filter(
-        lambda name: name.blocker.upper()
-    ):
+    async for message in stream.take(len(prohibited_users.keys())):
         table[message.blocker] = message.blocked
         print(table[message.blocker])
