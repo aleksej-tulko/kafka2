@@ -80,4 +80,4 @@ async def filter_blocked_users(stream):
         if blocked_users:
             updated_blocker = table[user.blocker] + blocked_users
             table[user.blocker] = updated_blocker
-            yield table.keys()
+            yield table.items()
