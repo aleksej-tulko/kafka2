@@ -78,10 +78,10 @@ def output_blocked_users_from_db(blocked: list) -> None:
         print("\n".join(output_lines))
 
 
-@app.task(processed_stream)
-async def filter_blocked_users(stream):
+@app.task
+async def filter_blocked_users():
     count = 0
-    async for message in stream:
+    async for message in processed_stream:
         blocked_users = prohibited_users[message.recipient_name]
         if message.sender_name in blocked_users:
             await blocked_users_topic.send(
