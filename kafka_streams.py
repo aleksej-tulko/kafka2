@@ -7,9 +7,11 @@ prohibited_users = {
     "payaso": ["clown", "spammer"]
 }
 
+
 class BlockedUsers(faust.Record):
     blocker: str
     blocked: list[str]
+
 
 class Messages(faust.Record):
     sender_id: int
@@ -19,10 +21,12 @@ class Messages(faust.Record):
     amount: float
     content: str
 
+
 app = faust.App(
     "pract-task-3",
     broker="kafka://localhost:9093,localhost:9095,localhost:9097",
     store="rocksdb://",
+
 )
 
 table = app.Table(
@@ -31,33 +35,54 @@ table = app.Table(
     default=list
 )
 
-messages_topic = app.topic('messages', key_type=str, value_type=Messages)
-blocked_users_topic = app.topic('blocked_users', key_type=str, value_type=BlockedUsers)
+messages_topic = app.topic(
+    'messages',
+    key_type=str,
+    value_type=Messages
+)
+filtered_messages_topic = app.topic(
+    'filtered_messages',
+    key_type=str,
+    value_type=Messages
+)
 
-# Processor 1: фильтрует только заблокированных отправителей
-async def filter_blocked_only(msg: Messages) -> Messages | None:
-    blocked = prohibited_users.get(msg.recipient_name, [])
-    if msg.sender_name in blocked:
-        return msg
-    return None
+blocked_users_topic = app.topic(
+    'blocked_users',
+    key_type=str,
+    value_type=BlockedUsers
+)
 
-# Processor 2: метит сообщение, просто как пример обработки
-async def mark_blocked_flag(msg: Messages) -> Messages:
-    msg.content = f"[BLOCKED] {msg.content}"
-    return msg
+processed_stream = app.stream(messages_topic)
 
-# Основной обработчик — только здесь побочные эффекты
-@app.timer(interval=2.0)
-async def process_stream():
-    async for message in app.stream(
-        messages_topic,
-        processors=[filter_blocked_only, mark_blocked_flag]
-    ):
-        await blocked_users_topic.send(
-            value=BlockedUsers(
-                blocker=message.recipient_name,
-                blocked=[message.sender_name]
+def output_blocked_users_from_db(blocked):
+    blocker_to_blocked = {}
+
+    for blocker, blocked_list in prohibited_users.items():
+        filtered_blocked = [user for user in blocked if user in blocked_list]
+        if filtered_blocked:
+            blocker_to_blocked[blocker] = filtered_blocked
+
+    if blocker_to_blocked:
+        output_lines = []
+        for blocker, blocked_users in blocker_to_blocked.items():
+            blocked_str = ", ".join(sorted(blocked_users))
+            output_lines.append(f"{blocker} заблокировал(а): {blocked_str}")
+        print("\n".join(output_lines))
+
+
+@app.agent(processed_stream, sink=[output_blocked_users_from_db])
+async def filter_blocked_users(stream):
+    count = 0
+    async for message in stream:
+        blocked_users = prohibited_users[message.recipient_name]
+        if message.sender_name in blocked_users:
+            await blocked_users_topic.send(
+                value=BlockedUsers(
+                    blocker=message.recipient_name,
+                    blocked=[message.sender_name]
+                )
             )
-        )
-        table[message.recipient_name] = prohibited_users[message.recipient_name]
-        print(f"{message.recipient_name} заблокировал(а) {message.sender_name}")
+            table[message.recipient_name] = blocked_users
+        count += 1
+        if count % 1000 == 0:
+            yield table[message.recipient_name]
