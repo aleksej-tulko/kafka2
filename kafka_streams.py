@@ -88,9 +88,10 @@ async def filter_blocked_users(stream):
                     blocked=list(current_blocked_map[blocker])
                 )
             )
-        await filtered_messages_topic.send(
-            value=message
-        )
+        else:
+            await filtered_messages_topic.send(
+                value=message
+            )
 
 
 # @app.agent(messages_topic)
