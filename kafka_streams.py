@@ -54,9 +54,8 @@ blocked_users_topic = app.topic(
 
 
 def output_blocked_users_from_db(blocked):
-    for k, v in blocked:
+    for k in blocked:
         print(k)
-        print(v)
     # blocker_to_blocked = {}
 
     # for blocker, blocked_list in prohibited_users.items():
