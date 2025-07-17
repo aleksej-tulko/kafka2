@@ -70,7 +70,7 @@ async def filter_blocked_users(stream):
     async for message in stream.filter(
         lambda content: not regex.search(content.content)
     ):
-        blocked_users = table.get(message.recipient_name, [])
+        blocked_users = table.get(message.blocker, [])
         print(blocked_users)
         # if message.sender_name in blocked_users:
         #     blocker = message.recipient_name
