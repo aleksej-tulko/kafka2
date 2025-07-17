@@ -90,7 +90,7 @@ async def filter_blocked_users():
                     blocked=[message.sender_name]
                 )
             ):
-                break
+                continue
             table[message.recipient_name] = blocked_users
         # count += 1
         # if count % 1000 == 0:
