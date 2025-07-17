@@ -34,7 +34,7 @@ app = faust.App(
 )
 
 table = app.Table(
-    "blocked-users",
+    "blocked-users-table",
     partitions=2,
     default=list
 )
