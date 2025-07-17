@@ -68,14 +68,17 @@ current_blocked_map = defaultdict(set)
 @app.agent(blocked_users_topic)
 async def filter_blocked_users(stream):
     async for user in stream:
-        if user.blocker not in table:
+        # Инициализируем как set(), если нужно
+        if user.blocker not in table or not isinstance(table[user.blocker], set):
             table[user.blocker] = set()
-        blocked_users = set([blocked for blocked in user.blocked
-                             if blocked not in table[user.blocker]])
+
+        # Новые блокировки
+        blocked_users = {b for b in user.blocked if b not in table[user.blocker]}
+
         if blocked_users:
             table[user.blocker].update(blocked_users)
             print(f'{user.blocker} заблокировал {blocked_users}')
-            print(f'Всего {user.blocker} заблокирова: {table[user.blocker]}')
+            print(f'Всего {user.blocker} заблокирова: {sorted(table[user.blocker])}')
         # if message.sender_name in blocked_users:
         #     blocker = message.recipient_name
         #     blocked = message.sender_name
