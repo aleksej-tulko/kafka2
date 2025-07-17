@@ -59,20 +59,10 @@ blocked_users_topic = app.topic(
 current_blocked_map = defaultdict(set)
 
 
-def output_blocked_users_from_db(blocked):
-    blocker_to_blocked = {}
-
-    for blocker, blocked_list in prohibited_users.items():
-        filtered_blocked = [user for user in blocked if user in blocked_list]
-        if filtered_blocked:
-            blocker_to_blocked[blocker] = filtered_blocked
-
-    if blocker_to_blocked:
-        output_lines = []
-        for blocker, blocked_users in blocker_to_blocked.items():
-            blocked_str = ", ".join(set(blocked_users))
-            output_lines.append(f"{blocker} заблокировал(а): {blocked_str}")
-        print("\n".join(output_lines))
+def output_blocked_users_from_db(table_items):
+    for blocker, blocked_list in table_items:
+        blocked_str = ", ".join(blocked_list)
+        print(f"{blocker} заблокировал(а): {blocked_str}")
 
 
 @app.agent(messages_topic)
@@ -104,14 +94,8 @@ async def filter_messages(stream):
 
 @app.agent(blocked_users_topic, sink=[output_blocked_users_from_db])
 async def save_blocked_to_db(stream):
-    count = 0
     async for message in stream:
-        if table[message.blocker]:
-            current_blocked = table[message.blocker] or []
-            new_blocked = list(set(current_blocked + message.blocked))
-            table[message.blocker] = new_blocked
-        else:
-            table[message.blocker] = message.blocked
-        count += 1
-        if count % 1000 == 0:
-            yield table
+        current_blocked = table[message.blocker] or []
+        new_blocked = list(set(current_blocked + message.blocked))
+        table[message.blocker] = new_blocked
+        yield table.items()
