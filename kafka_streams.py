@@ -50,7 +50,14 @@ blocked_users_topic = app.topic(
 )
 
 
-def output_blocked_users_from_db(blocked):
+def capitalize_names(users: BlockedUsers) -> BlockedUsers:
+    print(users)
+
+
+stream = app.stream(messages_topic, processors=[capitalize_names])
+
+
+def output_blocked_users_from_db(blocked: list) -> None:
     blocker_to_blocked = {}
 
     for blocker, blocked_list in prohibited_users.items():
@@ -64,7 +71,6 @@ def output_blocked_users_from_db(blocked):
             blocked_str = ", ".join(sorted(blocked_users))
             output_lines.append(f"{blocker} заблокировал(а): {blocked_str}")
         print("\n".join(output_lines))
-
 
 
 @app.agent(messages_topic, sink=[output_blocked_users_from_db])
