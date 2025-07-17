@@ -69,7 +69,7 @@ def output_blocked_users_from_db(blocked):
         print("\n".join(output_lines))
 
 
-@app.agent(messages_topic, sink=[output_blocked_users_from_db])
+@app.agent(messages_topic)
 async def filter_blocked_users(stream):
     async for message in stream:
         blocked_users = prohibited_users[message.recipient_name]
