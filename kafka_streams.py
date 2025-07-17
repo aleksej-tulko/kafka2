@@ -65,10 +65,10 @@ blocked_users_topic = app.topic(
 current_blocked_map = defaultdict(set)
 
 
-def output_blocked_users_from_db(table_items):
-    for blocker, blocked_list in table_items:
-        blocked_str = ", ".join(blocked_list)
-        print(f"{blocker} заблокировал(а): {blocked_str}")
+# def output_blocked_users_from_db(table_items):
+#     for blocker, blocked_list in table_items:
+#         blocked_str = ", ".join(blocked_list)
+#         print(f"{blocker} заблокировал(а): {blocked_str}")
 
 
 @app.agent(messages_topic)
@@ -103,7 +103,7 @@ async def filter_messages(stream):
         )
 
 
-@app.agent(blocked_users_topic, sink=[output_blocked_users_from_db])
+@app.agent(blocked_users_topic)
 async def save_blocked_to_db(stream):
     async for message in stream:
         current_blocked = table[message.blocker] or []
