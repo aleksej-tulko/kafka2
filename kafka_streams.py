@@ -70,8 +70,8 @@ async def filter_blocked_users(stream):
     async for user in stream:
         if user.blocker not in table:
             table[user.blocker] = []
-            blocked_users = [user for user in user.blocked
-                             if user not in table[user.blocker]]
+            blocked_users = [blocked for blocked in user.blocked
+                             if blocked not in table[user.blocker]]
             print(f'{user.blocker} заблокировал {blocked_users}')
         # if message.sender_name in blocked_users:
         #     blocker = message.recipient_name
