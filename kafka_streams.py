@@ -65,7 +65,7 @@ blocked_users_topic = app.topic(
 current_blocked_map = defaultdict(set)
 
 
-@app.agent(messages_topic)
+@app.agent(blocked_users_topic)
 async def filter_blocked_users(stream):
     async for message in stream.filter(
         lambda content: not regex.search(content.content)
