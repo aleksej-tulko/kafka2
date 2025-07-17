@@ -52,6 +52,7 @@ blocked_users_topic = app.topic(
 
 def capitalize_names(users: BlockedUsers) -> BlockedUsers:
     print(users)
+    return users
 
 
 stream = app.stream(messages_topic, processors=[capitalize_names])
