@@ -78,7 +78,7 @@ def output_blocked_users_from_db(blocked: list) -> None:
         print("\n".join(output_lines))
 
 
-@app.agent(processed_stream, sink=[output_blocked_users_from_db])
+@app.task(processed_stream, sink=[output_blocked_users_from_db])
 async def filter_blocked_users(stream):
     count = 0
     async for message in stream:
