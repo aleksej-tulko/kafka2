@@ -68,7 +68,7 @@ current_blocked_map = defaultdict(set)
 @app.agent(blocked_users_topic)
 async def filter_blocked_users(stream):
     async for message in stream:
-        blocked_users = table.get(message.blocker, [])
+        blocked_users = table.get("spammer", [])
         print(blocked_users)
         # if message.sender_name in blocked_users:
         #     blocker = message.recipient_name
