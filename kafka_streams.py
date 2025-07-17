@@ -52,7 +52,6 @@ blocked_users_topic = app.topic(
     value_type=BlockedUsers
 )
 
-processed_stream = app.stream(messages_topic)
 
 def output_blocked_users_from_db(blocked):
     blocker_to_blocked = {}
@@ -70,9 +69,8 @@ def output_blocked_users_from_db(blocked):
         print("\n".join(output_lines))
 
 
-@app.agent(processed_stream, sink=[output_blocked_users_from_db])
+@app.agent(messages_topic, sink=[output_blocked_users_from_db])
 async def filter_blocked_users(stream):
-    count = 0
     async for message in stream:
         blocked_users = prohibited_users[message.recipient_name]
         if message.sender_name in blocked_users:
@@ -82,7 +80,10 @@ async def filter_blocked_users(stream):
                     blocked=[message.sender_name]
                 )
             )
-            table[message.recipient_name] = blocked_users
-        count += 1
-        if count % 1000 == 0:
-            yield table[message.recipient_name]
+
+@app.agent(blocked_users_topic)
+async def save_blocked_to_db(stream):
+    async for message in stream.filter(
+        lambda name: name.sender_name.upper()
+    ):
+        table[message.recipient_name] = message.sender_name
