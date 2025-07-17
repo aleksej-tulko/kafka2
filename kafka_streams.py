@@ -94,21 +94,6 @@ async def filter_blocked_users(stream):
             )
 
 
-# @app.agent(messages_topic)
-# async def filter_messages(stream):
-#     async for message in stream.filter(
-#         lambda content: not regex.search(content.content)
-#     ):
-#         blocked = table[message.recipient_name]
-#         if message.sender_name in blocked:
-#             print(f"[DEBUG] {message.sender_name} заблокирован {message.recipient_name}, сообщение отброшено")
-#             continue
-#         print(message)
-#         await filtered_messages_topic.send(
-#             value=message
-#         )
-
-
 @app.agent(blocked_users_topic)
 async def save_blocked_to_db(stream):
     async for message in stream:
