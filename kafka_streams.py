@@ -74,6 +74,7 @@ async def filter_blocked_users(stream):
                              if blocked not in table[user.blocker]])
         if blocked_users:
             table[user.blocker].extend(blocked_users)
+            table[user.blocker]
             print(f'{user.blocker} заблокировал {blocked_users}')
             print(f'Всего {user.blocker} заблокировал: {table[user.blocker]}')
         # if message.sender_name in blocked_users:
