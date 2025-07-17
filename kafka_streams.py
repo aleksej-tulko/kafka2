@@ -77,7 +77,7 @@ async def filter_blocked_users(stream):
             table[user.blocker] = updated_blocker
             print(f'{user.blocker} заблокировал {blocked_users}')
             print(f'Всего {user.blocker} заблокировал: {table[user.blocker]}')
-            blocked_users = []
+        blocked_users = []
         # if message.sender_name in blocked_users:
         #     blocker = message.recipient_name
         #     blocked = message.sender_name
