@@ -50,7 +50,7 @@ blocked_users_topic = app.topic(
 )
 
 
-def capitalize_names(users: BlockedUsers) -> BlockedUsers:
+def capitalize_names(users: Messages) -> Messages:
     sender = users.sender_name
     recipient = users.recipient_name
     if sender and recipient:
