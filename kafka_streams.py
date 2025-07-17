@@ -67,7 +67,7 @@ current_blocked_map = defaultdict(set)
 
 def capitalize_name(data):
     blocker, blocked_users = data
-    print(f'{blocker.upper()} заблокировал: {blocked_users}')
+    print(f'{blocker.upper()} заблокировал {", ".join(blocked_users)}')
 
 
 @app.agent(blocked_users_topic, sink=[capitalize_name])
