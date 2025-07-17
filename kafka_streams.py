@@ -65,9 +65,8 @@ blocked_users_topic = app.topic(
 current_blocked_map = defaultdict(set)
 
 
-def log_blocked(block_map):
-    for blocker, blocked in block_map:
-        print(f'{blocker} заблокировал: {blocked}')
+def log_blocked(block_dict):
+    print(f'{block_dict.blocker} заблокировал: {block_dict.blocked}')
 
 
 @app.agent(blocked_users_topic, sink=[log_blocked])
@@ -80,4 +79,4 @@ async def filter_blocked_users(stream):
         if blocked_users:
             updated_blocker = table[user.blocker] + blocked_users
             table[user.blocker] = updated_blocker
-            yield table.items()
+            yield table
