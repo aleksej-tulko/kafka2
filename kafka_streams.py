@@ -76,18 +76,22 @@ def output_blocked_users_from_db(blocked: list) -> None:
 
 @app.task
 async def filter_blocked_users():
+    # создаём stream внутри таска, чтобы task_owner не был None
     processed_stream = app.stream(messages_topic, processors=[capitalize_names])
-    count = 0
+
     async for message in processed_stream:
-        blocked_users = prohibited_users.get(message.recipient_name, [])
-        if message.sender_name in blocked_users:
+        sender = message.sender_name.lower()
+        recipient = message.recipient_name.lower()
+
+        if recipient in prohibited_users and sender in prohibited_users[recipient]:
             await blocked_users_topic.send(
-                value=BlockedUsers(
-                    blocker=message.recipient_name,
-                    blocked=[message.sender_name]
-                )
+                key=recipient,
+                value=BlockedUsers(blocker=recipient, blocked=[sender])
             )
-            table[message.recipient_name] = blocked_users
-        count += 1
-        if count % 1000 == 0:
-            yield table[message.recipient_name]
+            if sender not in table[recipient]:
+                table[recipient].append(sender)
+        else:
+            await filtered_messages_topic.send(
+                key=str(message.recipient_id),
+                value=message
+            )
