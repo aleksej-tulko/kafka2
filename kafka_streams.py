@@ -50,15 +50,7 @@ blocked_users_topic = app.topic(
 )
 
 
-def capitalize_names(msg: Messages) -> Messages:
-    if msg.sender_name:
-        msg.sender_name = msg.sender_name.upper()
-    if msg.recipient_name:
-        msg.recipient_name = msg.recipient_name.upper()
-    return msg
-
-
-def output_blocked_users_from_db(blocked: list) -> None:
+def output_blocked_users_from_db(blocked):
     blocker_to_blocked = {}
 
     for blocker, blocked_list in prohibited_users.items():
@@ -74,24 +66,20 @@ def output_blocked_users_from_db(blocked: list) -> None:
         print("\n".join(output_lines))
 
 
-@app.task
-async def filter_blocked_users():
-    # создаём stream внутри таска, чтобы task_owner не был None
-    processed_stream = app.stream(messages_topic, processors=[capitalize_names])
 
-    async for message in processed_stream:
-        sender = message.sender_name.lower()
-        recipient = message.recipient_name.lower()
-
-        if recipient in prohibited_users and sender in prohibited_users[recipient]:
+@app.agent(messages_topic, sink=[output_blocked_users_from_db])
+async def filter_blocked_users(stream):
+    count = 0
+    async for message in stream:
+        blocked_users = prohibited_users[message.recipient_name]
+        if message.sender_name in blocked_users:
             await blocked_users_topic.send(
-                key=recipient,
-                value=BlockedUsers(blocker=recipient, blocked=[sender])
+                value=BlockedUsers(
+                    blocker=message.recipient_name,
+                    blocked=[message.sender_name]
+                )
             )
-            if sender not in table[recipient]:
-                table[recipient].append(sender)
-        else:
-            await filtered_messages_topic.send(
-                key=str(message.recipient_id),
-                value=message
-            )
+            table[message.recipient_name] = blocked_users
+        count += 1
+        if count % 1000 == 0:
+            yield table[message.recipient_name]
