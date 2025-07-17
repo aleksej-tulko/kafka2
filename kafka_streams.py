@@ -1,6 +1,3 @@
-from threading import Thread
-from time import sleep
-
 import faust
 
 prohibited_users = {
@@ -41,27 +38,18 @@ table = app.Table(
 messages_topic = app.topic(
     'messages',
     key_type=str,
-    value_type=Messages,
-    partitions=2,
-    replicas=2,
-    retention=10
+    value_type=Messages
 )
 filtered_messages_topic = app.topic(
     'filtered_messages',
     key_type=str,
-    value_type=Messages,
-    partitions=2,
-    replicas=2,
-    retention=10
+    value_type=Messages
 )
 
 blocked_users_topic = app.topic(
     'blocked_users',
     key_type=str,
-    value_type=BlockedUsers,
-    partitions=2,
-    replicas=2,
-    retention=10
+    value_type=BlockedUsers
 )
 
 
