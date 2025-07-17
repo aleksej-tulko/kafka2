@@ -36,7 +36,8 @@ app = faust.App(
 table = app.Table(
     "blocked-users-table",
     partitions=2,
-    default=list
+    default=list,
+    persist=True
 )
 
 messages_topic = app.topic(
