@@ -86,7 +86,7 @@ async def filter_blocked_users(stream):
             yield (user.blocker, updated_blocker)
 
 
-processed_stream = app.stream(messages_topic, processors=[lower_str_input])
+processed_stream = app.stream(messages_topic, value_type=Messages, processors=[lower_str_input])
 
 @app.task
 async def filter_messages():
