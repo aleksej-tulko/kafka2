@@ -1,6 +1,5 @@
 import re
 import faust
-from collections import defaultdict
 
 prohibited_users = {
     "clown": ["spammer"],
@@ -9,8 +8,8 @@ prohibited_users = {
     "payaso": ["clown", "spammer"]
 }
 
-bad_words_pattern = r"\b(spam\w*|skam\w*|windows\w*)\b"
-regex = re.compile(bad_words_pattern, flags=re.IGNORECASE)
+bad_words_regexp = r"\b(spam\w*|skam\w*|windows\w*)\b"
+re_pattern = re.compile(bad_words_regexp, re.S)
 
 
 class BlockedUsers(faust.Record):
@@ -63,17 +62,23 @@ blocked_users_topic = app.topic(
 )
 
 
-def capitalize_name(data: tuple) -> None:
+def log_blocked(data: tuple) -> None:
     blocker, blocked_users = data
     print(f'{blocker.upper()} заблокировал {", ".join(blocked_users)}')
 
 
 def lower_str_input(value: Messages) -> Messages:
+    value.sender_name = value.sender_name.lower()
+    value.recipient_name = value.recipient_name.lower()
     value.content = value.content.lower()
     return value
 
 
-@app.agent(blocked_users_topic, sink=[capitalize_name])
+def mask_bad_words(value: Messages) -> Messages:
+    return re_pattern.sub(value, "***")
+
+
+@app.agent(blocked_users_topic, sink=[log_blocked])
 async def filter_blocked_users(stream):
     async for user in stream:
         if user.blocker not in table:
@@ -88,6 +93,9 @@ async def filter_blocked_users(stream):
 
 @app.task
 async def filter_messages():
-    processed_stream = app.stream(messages_topic, processors=[lower_str_input])
+    processed_stream = app.stream(
+        messages_topic,
+        processors=[lower_str_input, mask_bad_words]
+    )
     async for message in processed_stream:
         print(f"🎯 Обработано: {message}")
