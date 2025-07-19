@@ -75,7 +75,7 @@ def lower_str_input(value: Messages) -> Messages:
 
 
 def mask_bad_words(value: Messages) -> Messages:
-    return re_pattern.sub(value, "***")
+    return re_pattern.sub(value.content, "***")
 
 
 @app.agent(blocked_users_topic, sink=[log_blocked])
