@@ -4,7 +4,6 @@ import sys
 from datetime import timedelta
 
 import faust
-from faust.windows import WindowWrapper
 from dotenv import load_dotenv
 
 load_dotenv()
