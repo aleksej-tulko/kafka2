@@ -83,20 +83,14 @@ def mask_bad_words(value: Messages) -> Messages:
 @app.agent(blocked_users_topic, sink=[log_blocked])
 async def filter_blocked_users(stream):
     async for user in stream:
-        try:
-            if isinstance(user, BlockedUsers):
-                if user.blocker not in table:
-                    table[user.blocker] = []
-                blocked_users = [blocked for blocked in user.blocked
-                                 if blocked not in table[user.blocker]]
-                if blocked_users:
-                    updated_blocker = table[user.blocker] + blocked_users
-                    table[user.blocker] = updated_blocker
-                    yield (user.blocker, updated_blocker)
-            else:
-                raise TypeError("wrong type")
-        except faust.exceptions.FaustError as FE:
-            raise FE
+        if user.blocker not in table:
+            table[user.blocker] = []
+        blocked_users = [blocked for blocked in user.blocked
+                         if blocked not in table[user.blocker]]
+        if blocked_users:
+            updated_blocker = table[user.blocker] + blocked_users
+            table[user.blocker] = updated_blocker
+            yield (user.blocker, updated_blocker)
 
 
 @app.task
@@ -106,4 +100,5 @@ async def filter_messages():
         processors=[lower_str_input, mask_bad_words]
     )
     async for message in processed_stream:
-        await filtered_messages_topic.send(value=message)
+        if message.sender_name not in table[message.recipient_name]:
+            await filtered_messages_topic.send(value=message)
