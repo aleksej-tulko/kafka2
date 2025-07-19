@@ -99,6 +99,5 @@ async def filter_messages():
         processors=[lower_str_input, mask_bad_words]
     )
     async for message in processed_stream:
-        print(table.keys())
         if message.sender_name not in table[message.recipient_name]:
-            await filter_blocked_users.send(value=message)
+            await filter_messages.send(value=message)
