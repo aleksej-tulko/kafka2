@@ -100,7 +100,7 @@ async def filter_messages():
         processors=[lower_str_input, mask_bad_words]
     )
     async for message in processed_stream:
-        for value in table.values():
+        for key, value in table.items():
             print(value)
         if message.sender_name not in table[message.recipient_name]:
             await filtered_messages_topic.send(value=message)
