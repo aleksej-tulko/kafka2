@@ -140,14 +140,8 @@ async def filter_messages():
             await filtered_messages_topic.send(value=message)
 
 
-@app.timer(interval=10.0)
+@app.timer(interval=1.0)
 async def get_counter_per_user():
-    if app._stopped or app.should_stop:
-        return
-    try:
-        info = {}
-        for sender, counter in messages_frequency_table.items():
-            info[sender] = counter
+    info = {}
+    for sender, counter in messages_frequency_table.relative_to_now().items():
         logger.debug(f"Last full 30s window: {info}")
-    except RuntimeError as e:
-        logger.warning(f"Skipping timer due to shutdown: {e}")
