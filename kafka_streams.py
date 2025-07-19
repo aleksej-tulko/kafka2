@@ -101,4 +101,5 @@ async def filter_messages():
     )
     async for message in processed_stream:
         if message.sender_name not in table[message.recipient_name]:
+            print('ger')
             await filtered_messages_topic.send(value=message)
