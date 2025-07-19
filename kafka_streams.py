@@ -88,7 +88,7 @@ async def filter_blocked_users(stream):
 
 processed_stream = app.stream(messages_topic, processors=[lower_str_input])
 
-
+@app.task
 async def filter_messages():
     async for message in processed_stream:
         print(message)
