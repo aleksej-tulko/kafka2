@@ -101,6 +101,6 @@ async def filter_messages():
     )
     async for message in processed_stream:
         if message.sender_name in table[message.recipient_name]:
-            print(table.items())
+            print(f'Ключи {table.keys}, значения {table.values()}')
             # print(f'{message.recipient_name} заблокировал {message.sender_name}.')
         await filtered_messages_topic.send(value=message)
