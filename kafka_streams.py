@@ -4,6 +4,7 @@ import sys
 from datetime import timedelta
 
 import faust
+from faust.windows import WindowWrapper
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -140,9 +141,9 @@ async def filter_messages():
             await filtered_messages_topic.send(value=message)
 
 
-@app.timer(interval=TIMER_INTERVAL)
+@app.timer(interval=10.0)
 async def get_counter_per_user():
-    info = {}
-    for sender, counter in messages_frequency_table.items():
-        info[sender] = counter
-    logger.debug(info)
+    for key in messages_frequency_table.keys():
+        windowed: WindowWrapper = messages_frequency_table[key]
+        total = sum(windowed[now] for now in windowed)
+        print(f"{key} → {total}")
