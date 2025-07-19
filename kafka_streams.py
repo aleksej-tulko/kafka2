@@ -145,4 +145,4 @@ async def get_counter_per_user():
     info = {}
     for sender, counter in messages_frequency_table.relative_to_now().items().delta(30.0):
         info[sender] = counter
-    logger.debug(info)
+    logger.debug(f"Last full 30s window: {info}")
