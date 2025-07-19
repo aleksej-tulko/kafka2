@@ -141,9 +141,9 @@ async def filter_messages():
             await filtered_messages_topic.send(value=message)
 
 
-@app.timer(interval=10.0)
+@app.timer(interval=TIMER_INTERVAL)
 async def get_counter_per_user():
-    for key in messages_frequency_table.keys():
-        windowed: WindowWrapper = messages_frequency_table[key]
-        total = sum(windowed[now] for now in windowed)
-        print(f"{key} → {total}")
+    info = {}
+    for sender, counter in messages_frequency_table.relative_to_now.items():
+        info[sender] = counter
+    logger.debug(info)
