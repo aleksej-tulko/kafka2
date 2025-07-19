@@ -87,6 +87,6 @@ async def filter_messages():
         processors=[lower_str_input, mask_bad_words]
     )
     async for message in processed_stream:
-        print(message.sender_name + ' ' + f'{table[message.recipient_name]}')
+        # print(message.sender_name + ' ' + f'{table[message.recipient_name]}')
         if message.sender_name not in table[message.recipient_name]:
             await filtered_messages_topic.send(value=message)
