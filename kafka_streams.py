@@ -1,9 +1,32 @@
+import logging
 import re
-import faust
+import sys
 
+import faust
+from dotenv import load_dotenv
+
+load_dotenv()
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 bad_words_regexp = r"\b(spam\w*|skam\w*|windows\w*)\b"
 re_pattern = re.compile(bad_words_regexp, re.S)
+
+
+class LoggerMsg:
+    """Сообщения для логгирования."""
+
+    BLOCK_RECORD = ('Получатель {blocker} заблокировал '
+                    'отправителей {blocked_users}.')
+
+
+msg = LoggerMsg
 
 
 class BlockedUsers(faust.Record):
@@ -58,7 +81,11 @@ blocked_users_topic = app.topic(
 
 def log_blocked(data: tuple) -> None:
     blocker, blocked_users = data
-    print(f'{blocker.upper()} заблокировал {", ".join(blocked_users)}')
+    logger.info(
+        msg=msg.BLOCK_RECORD.format(
+            blocker=blocker, blocked_users=blocked_users
+        )
+    )
 
 
 def lower_str_input(value: Messages) -> Messages:
@@ -87,6 +114,5 @@ async def filter_messages():
         processors=[lower_str_input, mask_bad_words]
     )
     async for message in processed_stream:
-        # print(message.sender_name + ' ' + f'{table[message.recipient_name]}')
         if message.sender_name not in table[message.recipient_name]:
             await filtered_messages_topic.send(value=message)
