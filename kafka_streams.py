@@ -143,6 +143,6 @@ async def filter_messages():
 @app.timer(interval=TIMER_INTERVAL)
 async def get_counter_per_user():
     info = {}
-    for sender, counter in messages_frequency_table.relative_to_now().items():
+    for sender, counter in messages_frequency_table.relative_to_now().items().delta(30.0):
         info[sender] = counter
     logger.debug(info)
