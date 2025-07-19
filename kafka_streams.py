@@ -1,13 +1,6 @@
 import re
 import faust
-import faust.exceptions
 
-prohibited_users = {
-    "clown": ["spammer"],
-    "spammer": ["dodik", "payaso"],
-    "dodik": ["clown"],
-    "payaso": ["clown", "spammer"]
-}
 
 bad_words_regexp = r"\b(spam\w*|skam\w*|windows\w*)\b"
 re_pattern = re.compile(bad_words_regexp, re.S)
@@ -83,14 +76,8 @@ def mask_bad_words(value: Messages) -> Messages:
 @app.agent(blocked_users_topic, sink=[log_blocked])
 async def filter_blocked_users(stream):
     async for user in stream:
-        if user.blocker not in table:
-            table[user.blocker] = []
-        blocked_users = [blocked for blocked in user.blocked
-                         if blocked not in table[user.blocker]]
-        if blocked_users:
-            updated_blocker = table[user.blocker] + blocked_users
-            table[user.blocker] = updated_blocker
-            yield (user.blocker, updated_blocker)
+        table[user.blocker] = [blocked for blocked in user.blocked]
+        yield (user.blocker, user.blocked)
 
 
 @app.task
