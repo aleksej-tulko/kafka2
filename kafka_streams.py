@@ -143,6 +143,6 @@ async def filter_messages():
 @app.timer(interval=10.0)
 async def get_counter_per_user():
     info = {}
-    for sender, counter in messages_frequency_table.relative_to_now().items():
+    for sender, counter in messages_frequency_table.items():
         info[sender] = counter
     logger.debug(f"Last full 30s window: {info}")
