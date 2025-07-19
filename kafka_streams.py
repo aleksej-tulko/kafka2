@@ -106,5 +106,4 @@ async def filter_messages():
         processors=[lower_str_input, mask_bad_words]
     )
     async for message in processed_stream:
-        print(message)
-        await filter_messages.send(value=message)
+        await filtered_messages_topic.send(value=message)
