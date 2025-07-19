@@ -62,12 +62,15 @@ blocked_users_topic = app.topic(
     value_type=BlockedUsers
 )
 
-current_blocked_map = defaultdict(set)
 
-
-def capitalize_name(data):
+def capitalize_name(data: tuple) -> None:
     blocker, blocked_users = data
     print(f'{blocker.upper()} заблокировал {", ".join(blocked_users)}')
+
+
+def lower_str_input(value: Messages) -> Messages:
+    value.content = value.content.lower()
+    return value
 
 
 @app.agent(blocked_users_topic, sink=[capitalize_name])
@@ -81,3 +84,12 @@ async def filter_blocked_users(stream):
             updated_blocker = table[user.blocker] + blocked_users
             table[user.blocker] = updated_blocker
             yield (user.blocker, updated_blocker)
+
+
+processed_stream = app.stream(messages_topic, processors=[lower_str_input])
+
+
+app.task
+async def filter_messages():
+    async for message in processed_stream:
+        print(message)
