@@ -1,11 +1,16 @@
 import logging
 import re
 import sys
+from datetime import timedelta
 
 import faust
 from dotenv import load_dotenv
 
 load_dotenv()
+
+COUNTER_INTERVAL = 30
+WINDOW_RANGE = 60
+TIMER_INTERVAL = 60
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -60,6 +65,17 @@ table = app.Table(
     )
 )
 
+messages_frequency_table = app.Table(
+    "messages_frequency",
+    partitions=2,
+    default=int,
+).hopping(
+    WINDOW_RANGE,
+    COUNTER_INTERVAL,
+    expires=timedelta(hours=1),
+    key_index=True,
+)
+
 
 messages_topic = app.topic(
     'messages',
@@ -107,6 +123,12 @@ async def filter_blocked_users(stream):
         yield (user.blocker, table[user.blocker])
 
 
+@app.agent(messages_topic)
+async def count_frequency(stream):
+    async for message in stream:
+        messages_frequency_table[message.sender_name] += 1
+
+
 @app.task
 async def filter_messages():
     processed_stream = app.stream(
@@ -116,3 +138,11 @@ async def filter_messages():
     async for message in processed_stream:
         if message.sender_name not in table[message.recipient_name]:
             await filtered_messages_topic.send(value=message)
+
+
+@app.timer(interval=TIMER_INTERVAL)
+async def get_counter_per_user():
+    info = {}
+    for sender, counter in messages_frequency_table.items():
+        info[sender] = counter
+    print(info)
