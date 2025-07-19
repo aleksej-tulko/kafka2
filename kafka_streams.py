@@ -77,7 +77,7 @@ def mask_bad_words(value: Messages) -> Messages:
 async def filter_blocked_users(stream):
     async for user in stream:
         table[user.blocker] = [blocked for blocked in user.blocked]
-        yield (user.blocker, user.blocked)
+        yield (user.blocker, table[user.blocker])
 
 
 @app.task
