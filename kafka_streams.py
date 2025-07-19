@@ -78,6 +78,7 @@ def mask_bad_words(value: Messages) -> Messages:
     value.content = re_pattern.sub("***", value.content)
     return value
 
+
 @app.agent(blocked_users_topic, sink=[log_blocked])
 async def filter_blocked_users(stream):
     async for user in stream:
