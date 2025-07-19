@@ -116,7 +116,7 @@ def mask_bad_words(value: Messages) -> Messages:
     return value
 
 
-@app.agent(blocked_users_topic, sink=[log_blocked])
+@app.agent(blocked_users_topic)
 async def filter_blocked_users(stream):
     async for user in stream:
         table[user.blocker] = [blocked for blocked in user.blocked]
