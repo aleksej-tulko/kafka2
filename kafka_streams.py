@@ -116,7 +116,7 @@ def mask_bad_words(value: Messages) -> Messages:
     return value
 
 
-@app.agent(blocked_users_topic)
+@app.agent(blocked_users_topic, sink=[log_blocked])
 async def filter_blocked_users(stream):
     async for user in stream:
         table[user.blocker] = [blocked for blocked in user.blocked]
@@ -143,9 +143,6 @@ async def filter_messages():
 @app.timer(interval=TIMER_INTERVAL)
 async def get_counter_per_user():
     info = {}
-    for sender in messages_frequency_table.keys():
-        count = messages_frequency_table[sender]
-        print(count)
-    # for sender, counter in messages_frequency_table.relative_to_now().items():
-    #     info[sender] = counter
-    # logger.debug(f"Last full 30s window: {info}")
+    for sender, counter in messages_frequency_table.relative_to_now().items():
+        info[sender] = counter
+    logger.debug(f"Last full 30s window: {info}")
