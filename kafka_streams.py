@@ -1,7 +1,7 @@
 import logging
 import re
 import sys
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import faust
 from dotenv import load_dotenv
@@ -132,7 +132,7 @@ async def count_frequency(stream):
         now_value = value.now() or 0
         prev_value = value.delta(timedelta(seconds=WINDOW_RANGE)) or 0
         delta_change = now_value - prev_value
-        print(f'{message.sender_name} отправил {delta_change} сообщений.')
+        print(f'К {datetime.now()} {message.sender_name} отправил {delta_change} сообщений.')
 
 
 @app.task
@@ -144,11 +144,3 @@ async def filter_messages():
     async for message in processed_stream:
         if message.sender_name not in table[message.recipient_name]:
             await filtered_messages_topic.send(value=message)
-
-
-# @app.timer(interval=10.0)
-# def get_data():
-#     keys = ["clown"]
-#     for key in keys:
-#         value = messages_frequency_table[key].delta(30.0)
-#         print(f"{key}: {value}")
