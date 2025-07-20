@@ -71,6 +71,11 @@ messages_frequency_table = app.Table(
     "messages_frequency",
     partitions=2,
     default=int,
+    changelog_topic=app.topic(
+        "messages-frequency-changelog",
+        value_type=list,
+        partitions=2
+    )
 ).hopping(
     WINDOW_RANGE,
     COUNTER_INTERVAL,
