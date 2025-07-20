@@ -133,7 +133,7 @@ async def count_frequency(stream):
     async for message in stream:
         messages_frequency_table[message.sender_name] += 1
         value = messages_frequency_table[message.sender_name]
-        print(value.delta(30))
+        print(value.current())
 
 
 @app.task
