@@ -172,5 +172,5 @@ async def filter_messages():
 
 @app.timer(interval=10.0)
 async def check_time_delta():
-    for event in timer_topic.stream():
+    async for event in timer_topic.stream():
         print(event)
