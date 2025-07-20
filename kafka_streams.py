@@ -134,6 +134,7 @@ async def count_frequency(stream):
         prev_value = value.delta(timedelta(seconds=WINDOW_RANGE)) or 0
         delta_change = now_value - prev_value
         print(f'За {datetime.now() - cycle_start_time} {message.sender_name} отправил {delta_change} сообщений.')
+        cycle_start_time = datetime.now()
 
 
 @app.task
