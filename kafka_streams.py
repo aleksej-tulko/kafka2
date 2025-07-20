@@ -29,7 +29,7 @@ class LoggerMsg:
 
     BLOCK_RECORD = ('Получатель {blocker} заблокировал '
                     'отправителей {blocked_users}.')
-    NOT_ENOUGH_MSG = ('Отправитель')
+    ENOUGH_MSG = ('Отправитель {sender} уже отправил {count} сообщений.')
 
 
 msg = LoggerMsg
@@ -117,10 +117,13 @@ def log_blocked(data: tuple) -> None:
     )
 
 
-def log_msg_counter(counter: int) -> None:
-    if counter > 1000:
+def log_msg_counter(counter: tuple) -> None:
+    sender, count = counter
+    if counter == 1000:
         logger.info(
-            counter
+            msg=msg.ENOUGH_MSG.format(
+                sender=sender, count=count
+            )
         )
 
 
@@ -158,7 +161,7 @@ async def count_frequency(stream):
                 dt_now=datetime.now()
             )
         )
-        yield delta_change
+        yield (message.sender_name, delta_change)
 
 
 @app.task
