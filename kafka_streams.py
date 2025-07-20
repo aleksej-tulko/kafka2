@@ -166,11 +166,7 @@ async def count_frequency(stream):
 @app.task
 async def filter_messages():
     processed_stream = app.stream(
-        messages_topic,
-        processors=[mask_bad_words]
+        messages_topic
     )
-    print('heh')
     async for message in processed_stream:
-        print('kek')
-        if message.sender_name not in table[message.recipient_name]:
-            await filtered_messages_topic.send(value=message)
+        await filtered_messages_topic.send(value=message)
