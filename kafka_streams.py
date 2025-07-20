@@ -74,7 +74,7 @@ messages_frequency_table = app.Table(
     COUNTER_INTERVAL,
     expires=timedelta(hours=1),
     key_index=True,
-).relative_to_field(Messages.content)
+).relative_to_stream()
 
 
 messages_topic = app.topic(
@@ -143,5 +143,5 @@ async def filter_messages():
 @app.timer(interval=10.0)
 async def get_counter_per_user():
     info = {}
-    for sender, counter in messages_frequency_table.relative_to_field(Messages.content).items():
+    for sender, counter in messages_frequency_table.relative_to_stream().items():
         logger.debug(f"Last full 30s window: {counter}")
