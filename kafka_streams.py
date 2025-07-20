@@ -39,7 +39,6 @@ class CountTimer(faust.Record):
     sender_name: str
     count: int
     dt_now: datetime
-    dt_prev: datetime
 
 
 class BlockedUsers(faust.Record):
@@ -120,9 +119,7 @@ def log_blocked(data: tuple) -> None:
 
 def log_msg_counter(counter: int) -> None:
     logger.info(
-        msg=msg.BLOCK_RECORD.format(
-            counter=counter
-        )
+        msg="sdvs"
     )
 
 
@@ -145,7 +142,7 @@ async def filter_blocked_users(stream):
         yield (user.blocker, table[user.blocker])
 
 
-@app.agent(messages_topic)
+@app.agent(messages_topic, sink=[log_msg_counter])
 async def count_frequency(stream):
     async for message in stream:
         messages_frequency_table[message.sender_name] += 1
@@ -157,8 +154,7 @@ async def count_frequency(stream):
             value=CountTimer(
                 sender_name=message.sender_name,
                 count=delta_change,
-                dt_now=datetime.now(),
-                dt_prev=(datetime.now() - timedelta(seconds=WINDOW_RANGE))
+                dt_now=datetime.now()
             )
         )
 
@@ -172,4 +168,3 @@ async def filter_messages():
     async for message in processed_stream:
         if message.sender_name not in table[message.recipient_name]:
             await filtered_messages_topic.send(value=message)
-
