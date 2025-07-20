@@ -1,13 +1,16 @@
 import logging
 import re
 import sys
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import faust
+from dotenv import load_dotenv
 
-COUNTER_INTERVAL = 45
+load_dotenv()
+
+COUNTER_INTERVAL = 30
 WINDOW_RANGE = 60
-
+TIMER_INTERVAL = 59
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -26,18 +29,9 @@ class LoggerMsg:
 
     BLOCK_RECORD = ('Получатель {blocker} заблокировал '
                     'отправителей {blocked_users}.')
-    ENOUGH_MSG = ('Отправитель {sender} '
-                  'уже отправил {count} сообщений '
-                  'в текущем окне.')
 
 
 msg = LoggerMsg
-
-
-class CountTimer(faust.Record):
-    sender_name: str
-    count: int
-    dt_now: datetime
 
 
 class BlockedUsers(faust.Record):
@@ -74,11 +68,11 @@ table = app.Table(
 messages_frequency_table = app.Table(
     "messages_frequency",
     partitions=2,
-    default=int
+    default=int,
 ).hopping(
     WINDOW_RANGE,
     COUNTER_INTERVAL,
-    expires=timedelta(minutes=10),
+    expires=timedelta(hours=1),
     key_index=True,
 )
 
@@ -100,12 +94,6 @@ blocked_users_topic = app.topic(
     value_type=BlockedUsers
 )
 
-timer_topic = app.topic(
-    'count_timer',
-    key_type=str,
-    value_type=CountTimer
-)
-
 
 def log_blocked(data: tuple) -> None:
     blocker, blocked_users = data
@@ -116,16 +104,6 @@ def log_blocked(data: tuple) -> None:
     )
 
 
-def log_msg_counter(counter: tuple) -> None:
-    sender, count = counter
-    if count == 1000:
-        logger.info(
-            msg=msg.ENOUGH_MSG.format(
-                sender=sender, count=count
-            )
-        )
-
-
 def lower_str_input(value: Messages) -> Messages:
     value.sender_name = value.sender_name.lower()
     value.recipient_name = value.recipient_name.lower()
@@ -134,7 +112,7 @@ def lower_str_input(value: Messages) -> Messages:
 
 
 def mask_bad_words(value: Messages) -> Messages:
-    value.content = re_pattern.sub('[CENSORED]', value.content)
+    value.content = re_pattern.sub("***", value.content)
     return value
 
 
@@ -145,22 +123,10 @@ async def filter_blocked_users(stream):
         yield (user.blocker, table[user.blocker])
 
 
-@app.agent(messages_topic, sink=[log_msg_counter])
+@app.agent(messages_topic)
 async def count_frequency(stream):
     async for message in stream:
         messages_frequency_table[message.sender_name] += 1
-        value = messages_frequency_table[message.sender_name]
-        now_value = value.now() or 0
-        prev_value = value.delta(timedelta(seconds=WINDOW_RANGE)) or 0
-        delta_change = now_value - prev_value
-        await timer_topic.send(
-            value=CountTimer(
-                sender_name=message.sender_name,
-                count=delta_change,
-                dt_now=datetime.now()
-            )
-        )
-        yield (message.sender_name, delta_change)
 
 
 @app.task
