@@ -169,4 +169,5 @@ async def filter_messages():
         messages_topic
     )
     async for message in processed_stream:
+        print('ev')
         await filtered_messages_topic.send(value=message)
