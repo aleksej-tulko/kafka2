@@ -1,7 +1,7 @@
 import logging
 import re
 import sys
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import faust
 from dotenv import load_dotenv
@@ -38,6 +38,7 @@ msg = LoggerMsg
 class CountTimer(faust.Record):
     sender_name: str
     count: int
+    dt: datetime
 
 
 class BlockedUsers(faust.Record):
@@ -154,7 +155,8 @@ async def count_frequency(stream):
         await timer_topic.send(
             value=CountTimer(
                 sender_name=message.sender_name,
-                count=delta_change
+                count=delta_change,
+                dt=datetime.now()
             )
         )
 
@@ -169,8 +171,3 @@ async def filter_messages():
         if message.sender_name not in table[message.recipient_name]:
             await filtered_messages_topic.send(value=message)
 
-
-@app.timer(interval=10.0)
-async def check_time_delta():
-    async for event in timer_topic.stream():
-        print(event)
