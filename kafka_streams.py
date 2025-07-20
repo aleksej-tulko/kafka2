@@ -176,7 +176,6 @@ async def filter_messages(stream): # Отправка в отстортиров�
         processors=[lower_str_input, mask_bad_words] # Обработка
     )
     async for message in processed_stream:
-        if message.sender_name in table[message.recipient_name]: # Проверка цензуры
-            continue
-        else:
+        if message.sender_name not in table[message.recipient_name]: # Проверка цензуры
+            print(f'{message.sender_name} не блокирует {table[message.recipient_name]}')
             await filtered_messages_topic.send(value=message)
