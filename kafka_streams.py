@@ -129,6 +129,11 @@ async def count_frequency(stream):
         messages_frequency_table[message.sender_name] += 1
 
 
+@app.agent(messages_frequency_table):
+async def get_table(stream):
+    for k,v in stream.items():
+        print(v)
+
 @app.task
 async def filter_messages():
     processed_stream = app.stream(
@@ -138,10 +143,3 @@ async def filter_messages():
     async for message in processed_stream:
         if message.sender_name not in table[message.recipient_name]:
             await filtered_messages_topic.send(value=message)
-
-
-@app.timer(interval=1.0)
-async def get_counter_per_user():
-    info = {}
-    for sender, counter in messages_frequency_table.items():
-        logger.debug(f"Last full 30s window: {counter}")
