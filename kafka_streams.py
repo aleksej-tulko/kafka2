@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-COUNTER_INTERVAL = 10
+COUNTER_INTERVAL = 45
 WINDOW_RANGE = 60
 
 
@@ -137,7 +137,7 @@ def lower_str_input(value: Messages) -> Messages:
 
 
 def mask_bad_words(value: Messages) -> Messages:
-    value.content = re_pattern.sub("***", value.content)
+    value.content = re_pattern.sub('[CENSORED]', value.content)
     return value
 
 
