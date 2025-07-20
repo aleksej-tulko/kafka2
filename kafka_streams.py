@@ -4,9 +4,6 @@ import sys
 from datetime import datetime, timedelta
 
 import faust
-from dotenv import load_dotenv
-
-load_dotenv()
 
 COUNTER_INTERVAL = 45
 WINDOW_RANGE = 60
@@ -173,5 +170,7 @@ async def filter_messages():
         processors=[lower_str_input, mask_bad_words]
     )
     async for message in processed_stream:
+        print('her')
         if message.sender_name not in table[message.recipient_name]:
+            print('kek')
             await filtered_messages_topic.send(value=message)
