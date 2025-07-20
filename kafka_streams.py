@@ -118,9 +118,9 @@ def log_blocked(data: tuple) -> None:
 
 
 def log_msg_counter(counter: int) -> None:
-    if counter < 1000:
+    if counter > 1000:
         logger.info(
-            msg="sdvs"
+            counter
         )
 
 
