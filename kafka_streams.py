@@ -144,7 +144,7 @@ async def filter_messages():
 
 @app.timer(interval=10.0)
 async def get_data():
-    keys = ["clown"]  # или динамически из базы
-    for key in keys:
-        value = messages_frequency_table[key].now()
+    keys = ["clown"]
+    async for key in keys:
+        value = messages_frequency_table[key].delta(30.0)
         print(f"{key}: {value}")
