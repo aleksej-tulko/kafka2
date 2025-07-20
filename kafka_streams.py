@@ -126,15 +126,14 @@ async def filter_blocked_users(stream):
 
 @app.agent(messages_topic)
 async def count_frequency(stream):
-    cycle_start_time = datetime.now()
     async for message in stream:
         messages_frequency_table[message.sender_name] += 1
         value = messages_frequency_table[message.sender_name]
         now_value = value.now() or 0
         prev_value = value.delta(timedelta(seconds=WINDOW_RANGE)) or 0
         delta_change = now_value - prev_value
-        print(f'За {datetime.now() - cycle_start_time} {message.sender_name} отправил {delta_change} сообщений.')
-        cycle_start_time = datetime.now()
+        print(value.value())
+
 
 
 @app.task
