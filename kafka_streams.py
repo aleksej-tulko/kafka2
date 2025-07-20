@@ -99,3 +99,4 @@ async def filter_messages():
     )
     async for message in processed_stream:
         print(f"🎯 Обработано: {message}")
+        await filtered_messages_topic.send(value=message)
