@@ -47,9 +47,6 @@ class Messages(faust.Record):
     amount: float
     content: str
 
-class Counter(faust.Record):
-    counter: int
-
 
 app = faust.App(
     "pract-task-3",
@@ -133,7 +130,7 @@ async def count_frequency(stream):
     async for message in stream:
         messages_frequency_table[message.sender_name] += 1
         value = messages_frequency_table[message.sender_name]
-        print(value.current())
+        print(f'{message.sender_name} - {value.delta(timedelta(seconds=WINDOW_RANGE)) - value.now()}')
 
 
 @app.task
