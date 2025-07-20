@@ -138,29 +138,29 @@ def mask_bad_words(value: Messages) -> Messages:
     return value
 
 
-@app.agent(blocked_users_topic)
+@app.agent(blocked_users_topic, sink=[log_blocked])
 async def filter_blocked_users(stream):
     async for user in stream:
         table[user.blocker] = [blocked for blocked in user.blocked]
-        # yield (user.blocker, table[user.blocker])
+        yield (user.blocker, table[user.blocker])
 
 
-# @app.agent(messages_topic, sink=[log_msg_counter])
-# async def count_frequency(stream):
-#     async for message in stream:
-#         messages_frequency_table[message.sender_name] += 1
-#         value = messages_frequency_table[message.sender_name]
-#         now_value = value.now() or 0
-#         prev_value = value.delta(timedelta(seconds=WINDOW_RANGE)) or 0
-#         delta_change = now_value - prev_value
-#         await timer_topic.send(
-#             value=CountTimer(
-#                 sender_name=message.sender_name,
-#                 count=delta_change,
-#                 dt_now=datetime.now()
-#             )
-#         )
-#         yield (message.sender_name, delta_change)
+@app.agent(messages_topic, sink=[log_msg_counter])
+async def count_frequency(stream):
+    async for message in stream:
+        messages_frequency_table[message.sender_name] += 1
+        value = messages_frequency_table[message.sender_name]
+        now_value = value.now() or 0
+        prev_value = value.delta(timedelta(seconds=WINDOW_RANGE)) or 0
+        delta_change = now_value - prev_value
+        await timer_topic.send(
+            value=CountTimer(
+                sender_name=message.sender_name,
+                count=delta_change,
+                dt_now=datetime.now()
+            )
+        )
+        yield (message.sender_name, delta_change)
 
 
 @app.task
@@ -169,7 +169,6 @@ async def filter_messages():
         messages_topic,
         processors=[lower_str_input, mask_bad_words]
     )
-    print(processed_stream[0])
     async for message in processed_stream:
         if message.sender_name not in table[message.recipient_name]:
             await filtered_messages_topic.send(value=message)
