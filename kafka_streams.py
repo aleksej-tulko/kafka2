@@ -157,6 +157,7 @@ async def count_frequency(stream):
                 dt_now=datetime.now()
             )
         )
+        yield delta_change
 
 
 @app.task
