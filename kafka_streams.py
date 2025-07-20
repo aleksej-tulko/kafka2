@@ -130,7 +130,11 @@ async def count_frequency(stream):
     async for message in stream:
         messages_frequency_table[message.sender_name] += 1
         value = messages_frequency_table[message.sender_name]
-        print(f'{message.sender_name} - {value.delta(timedelta(seconds=WINDOW_RANGE)) - value.now()}')
+        now_val = value.now() or 0
+        prev_val = value.delta(timedelta(seconds=WINDOW_RANGE)) or 0
+
+        delta_change = now_val - prev_val
+        print(f'{message.sender_name} — now: {now_val}, prev: {prev_val}, diff: {delta_change}')
 
 
 @app.task
