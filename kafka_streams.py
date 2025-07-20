@@ -73,7 +73,7 @@ messages_frequency_table = app.Table(
     default=int,
     changelog_topic=app.topic(
         "messages-frequency-changelog",
-        value_type=list,
+        value_type=int,
         partitions=2
     )
 ).hopping(
