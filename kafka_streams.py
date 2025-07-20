@@ -1,7 +1,7 @@
 import logging
 import re
 import sys
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import faust
 from dotenv import load_dotenv
@@ -10,6 +10,7 @@ load_dotenv()
 
 COUNTER_INTERVAL = 10
 WINDOW_RANGE = 60
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -28,9 +29,15 @@ class LoggerMsg:
 
     BLOCK_RECORD = ('Получатель {blocker} заблокировал '
                     'отправителей {blocked_users}.')
+    NOT_ENOUGH_MSG = ('Отправитель')
 
 
 msg = LoggerMsg
+
+
+class CountTimer(faust.Record):
+    sender_name: str
+    count: int
 
 
 class BlockedUsers(faust.Record):
@@ -95,12 +102,26 @@ blocked_users_topic = app.topic(
     value_type=BlockedUsers
 )
 
+timer_topic = app.topic(
+    'count_timer',
+    key_type=str,
+    value_type=BlockedUsers
+)
+
 
 def log_blocked(data: tuple) -> None:
     blocker, blocked_users = data
     logger.info(
         msg=msg.BLOCK_RECORD.format(
             blocker=blocker, blocked_users=blocked_users
+        )
+    )
+
+
+def log_msg_counter(counter: int) -> None:
+    logger.info(
+        msg=msg.BLOCK_RECORD.format(
+            counter=counter
         )
     )
 
@@ -132,9 +153,12 @@ async def count_frequency(stream):
         now_value = value.now() or 0
         prev_value = value.delta(timedelta(seconds=WINDOW_RANGE)) or 0
         delta_change = now_value - prev_value
-        print(value.value())
-
-
+        timer_topic.send(
+            value=CountTimer(
+                sender_name=message.sender_name,
+                counter=delta_change
+            )
+        )
 
 @app.task
 async def filter_messages():
