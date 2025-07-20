@@ -164,9 +164,9 @@ async def count_frequency(stream):
 
 
 @app.agent(messages_topic)
-async def filter_messages():
+async def filter_messages(stream):
     processed_stream = app.stream(
-        messages_topic,
+        stream,
         processors=[lower_str_input, mask_bad_words]
     )
     async for message in processed_stream:
