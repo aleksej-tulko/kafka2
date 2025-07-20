@@ -167,7 +167,7 @@ async def count_frequency(stream):
 async def filter_messages():
     processed_stream = app.stream(
         messages_topic,
-        processors=[lower_str_input, mask_bad_words]
+        processors=[mask_bad_words]
     )
     print('heh')
     async for message in processed_stream:
