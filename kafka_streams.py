@@ -129,7 +129,7 @@ async def count_frequency(stream):
         messages_frequency_table[message.sender_name] += 1
 
 
-@app.agent(messages_frequency_table):
+@app.agent(messages_frequency_table)
 async def get_table(stream):
     for k,v in stream.items():
         print(v)
