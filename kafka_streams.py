@@ -126,8 +126,8 @@ async def filter_blocked_users(stream):
 
 @app.agent(messages_topic)
 async def count_frequency(stream):
+    cycle_start_time = datetime.now()
     async for message in stream:
-        cycle_start_time = datetime.now()
         messages_frequency_table[message.sender_name] += 1
         value = messages_frequency_table[message.sender_name]
         now_value = value.now() or 0
