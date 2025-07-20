@@ -127,7 +127,7 @@ async def filter_blocked_users(stream):
 
 @app.agent(messages_topic)
 async def count_frequency(stream):
-    async for message in stream.group_by(Messages.sender_name):
+    async for message in stream:
         messages_frequency_table[message.sender_name] += 1
 
 
