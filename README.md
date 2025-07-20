@@ -76,7 +76,27 @@ kafka_streams фильтрует сообщения, приходящие в т�
     sudo docker exec -it compose-kafka_1-1 kafka-topics --create --topic filtered_messages --partitions 2 --replication-factor 2 --bootstrap-server localhost:9092 && sudo docker exec -it compose-kafka_1-1 kafka-topics --create --topic blocked_users --partitions 2 --replication-factor 2 --bootstrap-server localhost:9092 && sudo docker exec -it compose-kafka_1-1 kafka-topics --create --topic messages --partitions 2 --replication-factor 2 --bootstrap-server localhost:9092 && sudo docker exec -it compose-kafka_1-1 kafka-topics --create --topic pract-task-3-messages_frequency-key_index-changelog --partitions 2 --replication-factor 2 --bootstrap-server localhost:9092
     ```
 
-10. Добавить списки блокировок:
+9. Запустить генератор сообщений.
+    ```bash
+    docker compose up app -d
+    ```
+
+10. Создать рабочее окружение и активировать его:
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
+11. Установить зависимости:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+12. Запустить программу для сортировки и цензуры сообщений.
+    ```bash
+    faust -A kafka_streams worker -l INFO
+    ```
+
+13. В другом окне терминала добавить список блокировок:
     ```bash
     echo '{"blocker":"clown", "blocked":["dodik", "spammer"]}' | sudo docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic blocked_users
     echo '{"blocker":"spammer", "blocked":["dodik"]}' | sudo docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic blocked_users
@@ -84,25 +104,9 @@ kafka_streams фильтрует сообщения, приходящие в т�
     echo '{"blocker":"payaso", "blocked":["spammer"]}' | sudo docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic blocked_users
     ```
 
-10. Запустить генератор сообщений.
-    ```bash
-    docker compose up app -d
-    ```
+    При таком подходе списки применятся не сразу, какое-то кол-во заблокированных проскочит. Топик блокировки читает стрим, то есть данные о списках блокировки должны поступать так СТРИМ => ТОПИК БЛОКИРОВКИ => БД.
 
-11. Создать рабочее окружение и активировать его:
-    ```bash
-    python3 -m venv venv
-    source venv/bin/activate
-    ```
-12. Установить зависимости:
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-13. Запустить программу для сортировки и цензуры сообщений.
-    ```bash
-    faust -A kafka_streams worker -l INFO
-    ```
+14. Проверить *http://$server_ip:8080/ui/clusters/local/all-topics/filtered_messages/messages?keySerde=String&valueSerde=String&limit=100* 
 
 ## Автор
 [Aliaksei Tulko](https://github.com/aleksej-tulko)
