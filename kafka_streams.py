@@ -47,6 +47,9 @@ class Messages(faust.Record):
     amount: float
     content: str
 
+class Counter(faust.Record):
+    counter: int
+
 
 app = faust.App(
     "pract-task-3",
@@ -76,7 +79,7 @@ messages_frequency_table = app.Table(
     COUNTER_INTERVAL,
     expires=timedelta(hours=1),
     key_index=True,
-).relative_to_now()
+)
 
 
 messages_topic = app.topic(
@@ -118,17 +121,19 @@ def mask_bad_words(value: Messages) -> Messages:
     return value
 
 
-# @app.agent(blocked_users_topic, sink=[log_blocked])
-# async def filter_blocked_users(stream):
-#     async for user in stream:
-#         table[user.blocker] = [blocked for blocked in user.blocked]
-#         yield (user.blocker, table[user.blocker])
+@app.agent(blocked_users_topic, sink=[log_blocked])
+async def filter_blocked_users(stream):
+    async for user in stream:
+        table[user.blocker] = [blocked for blocked in user.blocked]
+        yield (user.blocker, table[user.blocker])
 
 
 @app.agent(messages_topic)
 async def count_frequency(stream):
     async for message in stream:
         messages_frequency_table[message.sender_name] += 1
+        value = messages_frequency_table[message.sender_name]
+        print(value.delta(30))
 
 
 @app.task
@@ -142,9 +147,9 @@ async def filter_messages():
             await filtered_messages_topic.send(value=message)
 
 
-@app.timer(interval=10.0)
-def get_data():
-    keys = ["clown"]
-    for key in keys:
-        value = messages_frequency_table[key].delta(30.0)
-        print(f"{key}: {value}")
+# @app.timer(interval=10.0)
+# def get_data():
+#     keys = ["clown"]
+#     for key in keys:
+#         value = messages_frequency_table[key].delta(30.0)
+#         print(f"{key}: {value}")
