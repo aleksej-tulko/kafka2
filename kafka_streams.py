@@ -158,6 +158,7 @@ async def count_frequency(stream):
             )
         )
 
+
 @app.task
 async def filter_messages():
     processed_stream = app.stream(
@@ -167,3 +168,9 @@ async def filter_messages():
     async for message in processed_stream:
         if message.sender_name not in table[message.recipient_name]:
             await filtered_messages_topic.send(value=message)
+
+
+@app.timer(interval=10.0)
+async def check_time_delta():
+    for event in timer_topic.stream():
+        print(event)
