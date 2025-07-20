@@ -29,7 +29,9 @@ class LoggerMsg:
 
     BLOCK_RECORD = ('Получатель {blocker} заблокировал '
                     'отправителей {blocked_users}.')
-    ENOUGH_MSG = ('Отправитель {sender} уже отправил {count} сообщений.')
+    ENOUGH_MSG = ('Отправитель {sender} '
+                  'уже отправил {count} сообщений '
+                  'в текущем окне.')
 
 
 msg = LoggerMsg
