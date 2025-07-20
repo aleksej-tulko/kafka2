@@ -142,7 +142,7 @@ async def filter_messages():
             await filtered_messages_topic.send(value=message)
 
 
-@app.agent("pract-task-3-messages_frequency-changelog")
-async def get_data(stream):
-    async for v in stream:
+@app.timer(interval=10.0)
+async def get_data():
+    for k, v in messages_frequency_table:
         print(v)
