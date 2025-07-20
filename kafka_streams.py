@@ -8,9 +8,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-COUNTER_INTERVAL = 30
+COUNTER_INTERVAL = 10
 WINDOW_RANGE = 60
-TIMER_INTERVAL = 59
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
