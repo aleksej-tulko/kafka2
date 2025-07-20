@@ -38,7 +38,8 @@ msg = LoggerMsg
 class CountTimer(faust.Record):
     sender_name: str
     count: int
-    dt: datetime
+    dt_now: datetime
+    dt_prev: datetime
 
 
 class BlockedUsers(faust.Record):
@@ -156,7 +157,8 @@ async def count_frequency(stream):
             value=CountTimer(
                 sender_name=message.sender_name,
                 count=delta_change,
-                dt=datetime.now()
+                dt_now=datetime.now(),
+                dt_prev=(datetime.now() - timedelta(seconds=WINDOW_RANGE))
             )
         )
 
