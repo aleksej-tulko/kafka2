@@ -146,3 +146,7 @@ async def filter_messages():
         if message.sender_name not in table[message.recipient_name]:
             await filtered_messages_topic.send(value=message)
 
+@app.agent("pract-task-3-messages_frequency-changelog")
+async def get_data(stream):
+    async for k, v in stream:
+        print(v)
