@@ -144,7 +144,7 @@ async def filter_messages():
 
 @app.timer(interval=10.0)
 async def get_data():
-    keys = ["user1", "user2", "user3"]  # или динамически из базы
+    keys = ["clown"]  # или динамически из базы
     for key in keys:
         value = messages_frequency_table[key].now()
         print(f"{key}: {value}")
