@@ -54,6 +54,8 @@ app = faust.App(
     store="rocksdb://",
 )
 
+app.conf.table_cleanup_interval = 1.0
+
 table = app.Table(
     "blocked-users-table",
     partitions=2,
@@ -139,9 +141,3 @@ async def filter_messages():
         if message.sender_name not in table[message.recipient_name]:
             await filtered_messages_topic.send(value=message)
 
-
-@app.timer(interval=10.0)
-async def get_counter_per_user():
-    info = {}
-    for sender, counter in messages_frequency_table.relative_to_now().items():
-        logger.debug(f"Last full 30s window: {counter}")
