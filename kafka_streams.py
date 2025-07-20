@@ -60,8 +60,6 @@ app = faust.App(
     store="rocksdb://",
 )
 
-app.conf.table_cleanup_interval = 1.0
-
 table = app.Table(
     "blocked-users-table",
     partitions=2,
@@ -80,7 +78,7 @@ messages_frequency_table = app.Table(
 ).hopping(
     WINDOW_RANGE,
     COUNTER_INTERVAL,
-    expires=timedelta(hours=1),
+    expires=timedelta(minutes=10),
     key_index=True,
 )
 
@@ -148,12 +146,11 @@ async def filter_blocked_users(stream):
 @app.agent(messages_topic)
 async def count_frequency(stream):
     async for message in stream:
-        messages_frequency_table[message.sender_name] -= 1
+        messages_frequency_table[message.sender_name] += 1
         value = messages_frequency_table[message.sender_name]
         now_value = value.now() or 0
         prev_value = value.delta(timedelta(seconds=WINDOW_RANGE)) or 0
         delta_change = now_value - prev_value
-        print(f'{message.sender_name} — now: {now_value}, prev: {prev_value}, diff: {delta_change}')
         await timer_topic.send(
             value=CountTimer(
                 sender_name=message.sender_name,
