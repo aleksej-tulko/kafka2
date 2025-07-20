@@ -72,7 +72,7 @@ table = app.Table( # Таблица, где постоянно хранятся 
     default=list,
     changelog_topic=app.topic( # При рестарте или сбое данные будут восстановлены из этого топика.
         "blocked-users-changelog",
-        value_type=list,
+        value_type=BlockedUsers(blocker=str, blocked=list),
         partitions=2
     )
 )
