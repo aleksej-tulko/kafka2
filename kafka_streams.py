@@ -1,15 +1,43 @@
+import logging
 import re
+import sys
+from datetime import datetime, timedelta
+
 import faust
 
-prohibited_users = {
-    "clown": ["spammer"],
-    "spammer": ["dodik", "payaso"],
-    "dodik": ["clown"],
-    "payaso": ["clown", "spammer"]
-}
+COUNTER_INTERVAL = 45
+WINDOW_RANGE = 60
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 bad_words_regexp = r"\b(spam\w*|skam\w*|windows\w*)\b"
 re_pattern = re.compile(bad_words_regexp, re.S)
+
+
+class LoggerMsg:
+    """Сообщения для логгирования."""
+
+    BLOCK_RECORD = ('Получатель {blocker} заблокировал '
+                    'отправителей {blocked_users}.')
+    ENOUGH_MSG = ('Отправитель {sender} '
+                  'уже отправил {count} сообщений '
+                  'в текущем окне.')
+
+
+msg = LoggerMsg
+
+
+class CountTimer(faust.Record):
+    sender_name: str
+    count: int
+    dt_now: datetime
 
 
 class BlockedUsers(faust.Record):
@@ -43,6 +71,17 @@ table = app.Table(
     )
 )
 
+messages_frequency_table = app.Table(
+    "messages_frequency",
+    partitions=2,
+    default=int
+).hopping(
+    WINDOW_RANGE,
+    COUNTER_INTERVAL,
+    expires=timedelta(minutes=10),
+    key_index=True,
+)
+
 
 messages_topic = app.topic(
     'messages',
@@ -61,10 +100,30 @@ blocked_users_topic = app.topic(
     value_type=BlockedUsers
 )
 
+timer_topic = app.topic(
+    'count_timer',
+    key_type=str,
+    value_type=CountTimer
+)
+
 
 def log_blocked(data: tuple) -> None:
     blocker, blocked_users = data
-    print(f'{blocker.upper()} заблокировал {", ".join(blocked_users)}')
+    logger.info(
+        msg=msg.BLOCK_RECORD.format(
+            blocker=blocker, blocked_users=blocked_users
+        )
+    )
+
+
+def log_msg_counter(counter: tuple) -> None:
+    sender, count = counter
+    if count == 1000:
+        logger.info(
+            msg=msg.ENOUGH_MSG.format(
+                sender=sender, count=count
+            )
+        )
 
 
 def lower_str_input(value: Messages) -> Messages:
@@ -75,28 +134,41 @@ def lower_str_input(value: Messages) -> Messages:
 
 
 def mask_bad_words(value: Messages) -> Messages:
-    return re_pattern.sub(value.content, "***")
+    value.content = re_pattern.sub('[CENSORED]', value.content)
+    return value
 
 
 @app.agent(blocked_users_topic, sink=[log_blocked])
 async def filter_blocked_users(stream):
     async for user in stream:
-        if user.blocker not in table:
-            table[user.blocker] = []
-        blocked_users = [blocked for blocked in user.blocked
-                         if blocked not in table[user.blocker]]
-        if blocked_users:
-            updated_blocker = table[user.blocker] + blocked_users
-            table[user.blocker] = updated_blocker
-            yield (user.blocker, updated_blocker)
+        table[user.blocker] = [blocked for blocked in user.blocked]
+        yield (user.blocker, table[user.blocker])
 
 
-@app.task
-async def filter_messages():
+@app.agent(messages_topic, sink=[log_msg_counter])
+async def count_frequency(stream):
+    async for message in stream:
+        messages_frequency_table[message.sender_name] += 1
+        value = messages_frequency_table[message.sender_name]
+        now_value = value.now() or 0
+        prev_value = value.delta(timedelta(seconds=WINDOW_RANGE)) or 0
+        delta_change = now_value - prev_value
+        await timer_topic.send(
+            value=CountTimer(
+                sender_name=message.sender_name,
+                count=delta_change,
+                dt_now=datetime.now()
+            )
+        )
+        yield (message.sender_name, delta_change)
+
+
+@app.agent(messages_topic)
+async def filter_messages(stream):
     processed_stream = app.stream(
-        messages_topic,
+        stream,
         processors=[lower_str_input, mask_bad_words]
     )
     async for message in processed_stream:
-        print(f"🎯 Обработано: {message}")
-        await filtered_messages_topic.send(value=message)
+        if message.sender_name not in table[message.recipient_name]:
+            await filtered_messages_topic.send(value=message)
