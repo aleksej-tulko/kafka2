@@ -74,7 +74,7 @@ table = app.Table( # Таблица, где постоянно хранятся 
     default=list,
     changelog_topic=app.topic( # При рестарте или сбое данные будут восстановлены из этого топика.
         "blocked-users-changelog",
-        value_type=BlockedUsers(blocker=str, blocked=list),
+        value_type=BlockedUsers(blocker=str, blocked=list[str]),
         partitions=2
     )
 )
@@ -179,6 +179,7 @@ async def filter_messages(stream): # Отправка в отстортиров�
         processors=[lower_str_input, mask_bad_words] # Обработка
     )
     async for message in processed_stream:
-        if message.sender_name not in table[message.recipient_name]: # Проверка цензуры. Проверка происходит несразу, данные из сначала должны попасть в messages, потом  бд, а бд должны это зафиксировать.
+        blocked_list = table[message.recipient_name]
+        if message.sender_name not in blocked_list: # Проверка цензуры. Проверка происходит несразу, данные из сначала должны попасть в messages, потом  бд, а бд должны это зафиксировать.
             print(f'{message.recipient_name} блокирует {table[message.recipient_name]}')
             await filtered_messages_topic.send(value=message)
