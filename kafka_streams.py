@@ -163,7 +163,7 @@ async def count_frequency(stream):
         yield (message.sender_name, delta_change)
 
 
-@app.task
+@app.agent(messages_topic)
 async def filter_messages():
     processed_stream = app.stream(
         messages_topic,
