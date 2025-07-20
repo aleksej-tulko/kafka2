@@ -178,4 +178,5 @@ async def filter_messages(stream): # Отправка в отстортиров�
     async for message in processed_stream:
         if message.sender_name in table[message.recipient_name]: # Проверка цензуры
             continue
-        await filtered_messages_topic.send(value=message)
+        else:
+            await filtered_messages_topic.send(value=message)
