@@ -156,7 +156,7 @@ async def count_frequency(stream):
         await timer_topic.send(
             value=CountTimer(
                 sender_name=message.sender_name,
-                count=delta_change
+                count=(now_value - delta_change)
             )
         )
 
