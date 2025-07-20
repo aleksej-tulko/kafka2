@@ -121,7 +121,7 @@ def log_blocked(data: tuple) -> None:
 
 def log_msg_counter(counter: tuple) -> None:
     sender, count = counter
-    if counter == 1000:
+    if count == 1000:
         logger.info(
             msg=msg.ENOUGH_MSG.format(
                 sender=sender, count=count
