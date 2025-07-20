@@ -105,7 +105,7 @@ blocked_users_topic = app.topic(
 timer_topic = app.topic(
     'count_timer',
     key_type=str,
-    value_type=BlockedUsers
+    value_type=CountTimer
 )
 
 
