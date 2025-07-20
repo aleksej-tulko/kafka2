@@ -74,7 +74,7 @@ messages_frequency_table = app.Table(
     COUNTER_INTERVAL,
     expires=timedelta(hours=1),
     key_index=True,
-).relative_to_stream()
+).relative_to_now()
 
 
 messages_topic = app.topic(
@@ -125,7 +125,7 @@ async def filter_blocked_users(stream):
 
 @app.agent(messages_topic)
 async def count_frequency(stream):
-    async for message in stream:
+    async for message in stream.group_by(Messages.sender_name):
         messages_frequency_table[message.sender_name] += 1
 
 
@@ -143,5 +143,5 @@ async def filter_messages():
 @app.timer(interval=10.0)
 async def get_counter_per_user():
     info = {}
-    for sender, counter in messages_frequency_table.relative_to_stream().items():
+    for sender, counter in messages_frequency_table.relative_to_now().items():
         logger.debug(f"Last full 30s window: {counter}")
