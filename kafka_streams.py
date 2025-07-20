@@ -66,6 +66,8 @@ app = faust.App(
     store="rocksdb://",
 )
 
+app.conf.consumer_auto_offset_reset = "earliest"
+
 table = app.Table( # Таблица, где постоянно хранятся списки заблокированных.
     "blocked-users-table",
     partitions=2,
