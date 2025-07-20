@@ -143,6 +143,6 @@ async def filter_messages():
 
 
 @app.timer(interval=10.0)
-async def get_data():
+def get_data():
     for k, v in messages_frequency_table:
         print(v)
