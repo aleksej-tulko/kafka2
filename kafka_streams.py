@@ -178,17 +178,8 @@ async def filter_messages(stream): # Отправка в отстортиров�
         processors=[lower_str_input, mask_bad_words] # Обработка
     )
     async for message in processed_stream:
-        print(table.get(message.recipient_name))
-        # blocked = table[message.recipient_name]
-        # if message.sender_name in blocked:
-        #     continue
-        # await filtered_messages_topic.send(value=message)
+        blocked = table.get(message.recipient_name)
+        if message.sender_name in blocked:
+            continue
+        await filtered_messages_topic.send(value=message)
 
-
-@app.timer(interval=1.0, on_leader=True)
-async def fake_initial_event():
-    if not table['fake_block']:
-        await blocked_users_topic.send(
-            key="fake",
-            value=BlockedUsers(blocker="system", blocked=[])
-        )
