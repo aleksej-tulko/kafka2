@@ -146,11 +146,11 @@ def mask_bad_words(value: Messages) -> Messages: # Замена запрещен
     return value
 
 
-@app.agent(blocked_users_topic, sink=[log_blocked]) # Сохранение блокировок из топика в БД.
-async def filter_blocked_users(stream):
-    async for user in stream:
-        table[user.blocker] = [blocked for blocked in user.blocked]
-        yield (user.blocker, table[user.blocker]) # Вызов логгера
+# @app.agent(blocked_users_topic, sink=[log_blocked]) # Сохранение блокировок из топика в БД.
+# async def filter_blocked_users(stream):
+#     async for user in stream:
+#         table[user.blocker] = [blocked for blocked in user.blocked]
+#         yield (user.blocker, table[user.blocker]) # Вызов логгера
 
 
 @app.agent(messages_topic, sink=[log_msg_counter]) # Подсчет кол-ва сообщений от отправителей за время жизни окна.
@@ -171,19 +171,21 @@ async def count_frequency(stream):
         yield (message.sender_name, delta_change) # Вызов логгера
 
 
-@app.agent(messages_topic)
-async def filter_messages(stream):
-    async for message in stream:
-        # Явная предварительная обработка
-        message = lower_str_input(message)
-        message = mask_bad_words(message)
+@app.agent(messages_topic, blocked_users_topic)
+async def test(stream):
+    async for event in stream:
+        print(event)
 
-        # Получаем список заблокированных из Table
-        blocked = table[message.recipient_name]
 
-        # Проверяем, заблокирован ли отправитель
-        if message.sender_name in blocked:
-            continue  # Блокируем сообщение
-        else:
-            await filtered_messages_topic.send(value=message)
+# @app.agent(messages_topic)
+# async def filter_messages(stream): # Отправка в отстортированные сообщения
+#     processed_stream = app.stream(
+#         stream,
+#         processors=[lower_str_input, mask_bad_words] # Обработка
+#     )
+#     async for message in processed_stream:
+#         blocked = table[message.recipient_name]
+#         if message.sender_name in blocked:
+#             continue
+#         await filtered_messages_topic.send(value=message)
 
