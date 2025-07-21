@@ -177,7 +177,7 @@ async def add_bad_words(stream):
         for word in words.words:
             print(word)
             if word not in bad_words_table['words']:
-                bad_words_table['words'] = words.words
+                bad_words_table['words'].extend(words.words)
                 value = bad_words_table.get('words')
                 print(value)
 
