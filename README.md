@@ -114,10 +114,10 @@ kafka_streams фильтрует сообщения, приходящие в т�
 14. Проверить фильтрацию сообщений:
 
     ```bash
-    echo '{"sender_id":228,"sender_name":"clown","recipient_id":69,"recipient_name":"dodik","amount":1.75,"content":"loh"}' | docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic messages
-    echo '{"sender_id":228,"sender_name":"dodik","recipient_id":69,"recipient_name":"payaso","amount":1.75,"content":"durak"}' | docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic messages
-    echo '{"sender_id":228,"sender_name":"payaso","recipient_id":69,"recipient_name":"spammer","amount":1.75,"content":"chert"}' | docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic messages
-    echo '{"sender_id":228,"sender_name":"clown","recipient_id":69,"recipient_name":"dodik","amount":1.75,"content":"labubu"}' | docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic messages
+    echo '{"sender_id":228,"sender_name":"clown","recipient_id":69,"recipient_name":"dodik","amount":1.75,"content":"loh"}' | sudo docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic messages
+    echo '{"sender_id":228,"sender_name":"dodik","recipient_id":69,"recipient_name":"payaso","amount":1.75,"content":"durak"}' | sudo docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic messages
+    echo '{"sender_id":228,"sender_name":"payaso","recipient_id":69,"recipient_name":"spammer","amount":1.75,"content":"chert"}' | sudo docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic messages
+    echo '{"sender_id":228,"sender_name":"clown","recipient_id":69,"recipient_name":"dodik","amount":1.75,"content":"labubu"}' | sudo docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic messages
     ```
 
     Ожидаемый результат: три первый сообщения будут зацензурированы, четвертое - нет.
