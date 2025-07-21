@@ -7,6 +7,7 @@ import faust
 
 COUNTER_INTERVAL = 45
 WINDOW_RANGE = 60
+TIME_INTERVAL = 10
 
 
 logger = logging.getLogger(__name__)
@@ -80,7 +81,7 @@ blocked_senders_table = app.Table( # Таблица, где постоянно �
     default=list
 )
 
-bad_words_table = app.Table( # Таблица, где постоянно хранятся списки заблокированных.
+bad_words_table = app.Table( # Таблица, где постоянно хранится список запретных слов.
     "bad-words-table",
     partitions=1,
     default=list
@@ -93,16 +94,16 @@ messages_frequency_table = app.Table( # Таблица для отслежива
 ).hopping(
     WINDOW_RANGE,
     COUNTER_INTERVAL,
-    expires=timedelta(minutes=10),
+    expires=timedelta(minutes=TIME_INTERVAL),
     key_index=True,
 )
-
 
 messages_topic = app.topic(
     'messages',
     key_type=str,
     value_type=Messages
 )
+
 filtered_messages_topic = app.topic(
     'filtered_messages',
     key_type=str,
