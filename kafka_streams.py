@@ -182,4 +182,3 @@ async def filter_messages(stream): # Отправка в отстортиров�
         if message.sender_name in blocked:
             continue
         await filtered_messages_topic.send(value=message)
-
