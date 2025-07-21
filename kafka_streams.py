@@ -150,6 +150,8 @@ def mask_bad_words(value: Messages) -> Messages: # Замена запрещен
 async def filter_blocked_users(stream):
     async for user in stream:
         table[user.blocker] = [blocked for blocked in user.blocked]
+        value = table[user.blocker]
+        print(value)
         yield (user.blocker, table[user.blocker]) # Вызов логгера
 
 
@@ -177,12 +179,6 @@ async def filter_messages(stream): # Отправка в отстортиров�
         stream,
         processors=[lower_str_input, mask_bad_words] # Обработка
     )
-    blocked_stream = app.stream(
-        blocked_users_topic
-    )
     async for message in processed_stream:
-        async for blocker in blocked_stream:
-            print(message.sender_name, blocker.blocker)
-            # if message.sender_name not in blocker.blocker:
-            #     logger.info(f'{message.recipient_name} блок {blocker.blocker}')
-            #     await filtered_messages_topic.send(value=message)
+        logger.info(f'{message.recipient_name} блок {table[message.recipient_name]}')
+        await filtered_messages_topic.send(value=message)
