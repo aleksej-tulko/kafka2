@@ -87,7 +87,7 @@ blocked_senders_table = app.Table( # Таблица, где постоянно �
 
 bad_words_table = app.Table( # Таблица, где постоянно хранятся списки заблокированных.
     "bad-words-table",
-    partitions=2,
+    partitions=1,
     default=list,
     changelog_topic=app.topic( # При рестарте или сбое данные будут восстановлены из этого топика.
         "bad-words-changelog",
