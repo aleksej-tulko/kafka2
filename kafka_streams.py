@@ -164,7 +164,7 @@ def lower_str_input(value: Messages) -> Messages: # Перевод строк в
     return value
 
 
-async def mask_bad_words(value: Messages) -> Messages: # Замена запрещеных слов на ['CENSORED']
+async def mask_bad_words(value: Messages) -> Messages: # Замена запрещеных слов на ***
     if value.content in bad_words_table['words']:
         value.content = '***' # Для работы со списком запрещенных слов
     value.content = re_pattern.sub('[CENSORED]', value.content) #Допфильтр: слова skam, spam, windows будут заменены на [CENSORED]
