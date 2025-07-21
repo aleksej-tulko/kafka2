@@ -17,8 +17,8 @@ formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-bad_words_regexp = r"\b(spam\w*|skam\w*|windows\w*)\b" #Регулярка для отлавливания запрещеных слов.
-re_pattern = re.compile(bad_words_regexp, re.S) #Паттерн, который будет использован для подмены запрещенных слов на [CENSORED].
+# bad_words_regexp = r"\b(spam\w*|skam\w*|windows\w*)\b" #Регулярка для отлавливания запрещеных слов.
+# re_pattern = re.compile(bad_words_regexp, re.S) #Паттерн, который будет использован для подмены запрещенных слов на [CENSORED].
 
 
 class LoggerMsg:
@@ -40,6 +40,12 @@ class CountTimer(faust.Record):
     sender_name: str
     count: int
     dt_now: datetime
+
+
+class BadWords(faust.Record):
+    """Модель запрещенных слов с полями."""
+
+    word: list[str]
 
 
 class BlockedUsers(faust.Record):
@@ -68,13 +74,24 @@ app = faust.App(
 
 app.conf.consumer_auto_offset_reset = "earliest"
 
-table = app.Table( # Таблица, где постоянно хранятся списки заблокированных.
+blocked_senders_table = app.Table( # Таблица, где постоянно хранятся списки заблокированных.
     "blocked-users-table",
     partitions=2,
     default=list,
     changelog_topic=app.topic( # При рестарте или сбое данные будут восстановлены из этого топика.
         "blocked-users-changelog",
         value_type=BlockedUsers(blocker=str, blocked=list[str]),
+        partitions=2
+    )
+)
+
+bad_words_table = app.Table( # Таблица, где постоянно хранятся списки заблокированных.
+    "bad-words-table",
+    partitions=2,
+    default=list,
+    changelog_topic=app.topic( # При рестарте или сбое данные будут восстановлены из этого топика.
+        "bad-words-changelog",
+        value_type=BadWords(word=list[str]),
         partitions=2
     )
 )
@@ -142,15 +159,16 @@ def lower_str_input(value: Messages) -> Messages: # Перевод строк в
 
 
 def mask_bad_words(value: Messages) -> Messages: # Замена запрещеных слов на ['CENSORED']
-    value.content = re_pattern.sub('[CENSORED]', value.content)
+    if value.content in bad_words_table:
+        value.content == '***'
     return value
 
 
 @app.agent(blocked_users_topic, sink=[log_blocked]) # Сохранение блокировок из топика в БД.
 async def filter_blocked_users(stream):
     async for user in stream:
-        table[user.blocker] = [blocked for blocked in user.blocked]
-        yield (user.blocker, table[user.blocker]) # Вызов логгера
+        blocked_senders_table[user.blocker] = [blocked for blocked in user.blocked]
+        yield (user.blocker, blocked_senders_table[user.blocker]) # Вызов логгера
 
 
 @app.agent(messages_topic, sink=[log_msg_counter]) # Подсчет кол-ва сообщений от отправителей за время жизни окна.
@@ -178,7 +196,7 @@ async def filter_messages(stream): # Отправка в отстортиров�
         processors=[lower_str_input, mask_bad_words] # Обработка
     )
     async for message in processed_stream:
-        blocked = table.get(message.recipient_name)
-        if message.sender_name in blocked:
+        blocked_users = blocked_senders_table.get(message.recipient_name)
+        if message.sender_name in blocked_users:
             continue
         await filtered_messages_topic.send(value=message)
