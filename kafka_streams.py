@@ -176,6 +176,7 @@ async def add_bad_words(stream):
     async for word in stream:
         if word not in bad_words_table['words']:
             bad_words_table['words'].append(word)
+            print(bad_words_table['words'])
 
 
 @app.agent(blocked_users_topic, sink=[log_blocked]) # Сохранение блокировок из топика в БД.
