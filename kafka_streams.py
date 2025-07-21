@@ -150,8 +150,6 @@ def mask_bad_words(value: Messages) -> Messages: # Замена запрещен
 async def filter_blocked_users(stream):
     async for user in stream:
         table[user.blocker] = [blocked for blocked in user.blocked]
-        value = table[user.blocker]
-        print(value)
         yield (user.blocker, table[user.blocker]) # Вызов логгера
 
 
@@ -174,23 +172,18 @@ async def count_frequency(stream):
 
 
 @app.agent(messages_topic)
-async def filter_messages(stream): # Отправка в отстортированные сообщения
-    processed_stream = app.stream(
-        stream,
-        processors=[lower_str_input, mask_bad_words] # Обработка
-    )
-    async for message in processed_stream:
+async def filter_messages(stream):
+    async for message in stream:
+        # Явная предварительная обработка
+        message = lower_str_input(message)
+        message = mask_bad_words(message)
+
+        # Получаем список заблокированных из Table
         blocked = table[message.recipient_name]
+
+        # Проверяем, заблокирован ли отправитель
         if message.sender_name in blocked:
-            print(f'{message.sender_name} в {blocked}')
-            continue
-        await filtered_messages_topic.send(value=message)
+            continue  # Блокируем сообщение
+        else:
+            await filtered_messages_topic.send(value=message)
 
-
-@app.timer(interval=10.0, on_leader=True)
-async def fake_initial_event():
-    if not table['fake_block']:
-        await blocked_users_topic.send(
-            key="fake",
-            value=BlockedUsers(blocker="system", blocked=[])
-        )
