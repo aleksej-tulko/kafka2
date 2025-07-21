@@ -125,6 +125,12 @@ blocked_users_topic = app.topic(
     value_type=BlockedUsers
 )
 
+bad_words_topic = app.topic(
+    'bad_words',
+    key_type=str,
+    value_type=BadWords
+)
+
 timer_topic = app.topic( # Топик, куда дублируется счетчик из БД. Логи идут из него, чтобы не нагружать БД.
     'count_timer',
     key_type=str,
@@ -162,6 +168,13 @@ def mask_bad_words(value: Messages) -> Messages: # Замена запрещен
     if value.content in bad_words_table:
         value.content == '***'
     return value
+
+
+@app.agent(bad_words_topic) # Сохранение блокировок из топика в БД.
+async def add_bad_words(stream):
+    async for word in stream:
+        if word not in blocked_senders_table['words']:
+            blocked_senders_table['words'].append[word]
 
 
 @app.agent(blocked_users_topic, sink=[log_blocked]) # Сохранение блокировок из топика в БД.
