@@ -185,3 +185,12 @@ async def filter_messages(stream): # Отправка в отстортиров�
             print(f'{message.sender_name} в {blocked}')
             continue
         await filtered_messages_topic.send(value=message)
+
+
+@app.timer(interval=30.0, on_leader=True)
+async def fake_initial_event():
+    if not table['fake_block']:
+        await blocked_users_topic.send(
+            key="fake",
+            value=BlockedUsers(blocker="system", blocked=[])
+        )
