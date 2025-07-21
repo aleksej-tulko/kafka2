@@ -17,8 +17,8 @@ formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-# bad_words_regexp = r"\b(spam\w*|skam\w*|windows\w*)\b" #Регулярка для отлавливания запрещеных слов.
-# re_pattern = re.compile(bad_words_regexp, re.S) #Паттерн, который будет использован для подмены запрещенных слов на [CENSORED].
+bad_words_regexp = r"\b(spam\w*|skam\w*|windows\w*)\b"
+re_pattern = re.compile(bad_words_regexp, re.S)
 
 
 class LoggerMsg:
@@ -166,7 +166,8 @@ def lower_str_input(value: Messages) -> Messages: # Перевод строк в
 
 async def mask_bad_words(value: Messages) -> Messages: # Замена запрещеных слов на ['CENSORED']
     if value.content in bad_words_table['words']:
-        value.content = '***'
+        value.content = '***' # Для работы со списком запрещенных слов
+    value.content = re_pattern.sub('[CENSORED]', value.content) #Допфильтр: слова skam, spam, windows будут заменены на [CENSORED]
     return value
 
 
@@ -177,8 +178,6 @@ async def add_bad_words(stream):
             if word not in bad_words_table['words']:
                 updated_bad_words_list = bad_words_table['words'] + words.words
                 bad_words_table['words'] = updated_bad_words_list
-                value = bad_words_table.get('words')
-                print(value)
 
 
 @app.agent(blocked_users_topic, sink=[log_blocked]) # Сохранение блокировок из топика в БД.
