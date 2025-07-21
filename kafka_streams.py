@@ -171,9 +171,9 @@ async def count_frequency(stream):
         yield (message.sender_name, delta_change) # Вызов логгера
 
 
-@app.agent(messages_topic)
+@app.agent(messages_topic, blocked_users_topic)
 async def filter_messages(stream): # Отправка в отстортированные сообщения
-    processed_stream = app.stream( 
+    processed_stream = app.stream(
         stream,
         processors=[lower_str_input, mask_bad_words] # Обработка
     )
