@@ -73,40 +73,63 @@ kafka_streams фильтрует сообщения, приходящие в т�
 
 8. Создать нужные топики:
     ```bash
-    sudo docker exec -it compose-kafka_1-1 kafka-topics --create --topic filtered_messages --partitions 2 --replication-factor 2 --bootstrap-server localhost:9092 && sudo docker exec -it compose-kafka_1-1 kafka-topics --create --topic blocked_users --partitions 2 --replication-factor 2 --bootstrap-server localhost:9092 && sudo docker exec -it compose-kafka_1-1 kafka-topics --create --topic messages --partitions 2 --replication-factor 2 --bootstrap-server localhost:9092 && sudo docker exec -it compose-kafka_1-1 kafka-topics --create --topic pract-task-3-messages_frequency-key_index-changelog --partitions 2 --replication-factor 2 --bootstrap-server localhost:9092
+    sudo docker exec -it compose-kafka_1-1 kafka-topics --create --topic filtered_messages --partitions 1 --replication-factor 2 --bootstrap-server localhost:9092 && sudo docker exec -it compose-kafka_1-1 kafka-topics --create --topic blocked_users --partitions 1 --replication-factor 2 --bootstrap-server localhost:9092 && sudo docker exec -it compose-kafka_1-1 kafka-topics --create --topic messages --partitions 1 --replication-factor 2 --bootstrap-server localhost:9092
     ```
 
-9. Запустить генератор сообщений.
-    ```bash
-    docker compose up app -d
-    ```
-
-10. Создать рабочее окружение и активировать его:
+9. Создать рабочее окружение и активировать его:
     ```bash
     python3 -m venv venv
     source venv/bin/activate
     ```
-11. Установить зависимости:
+10. Установить зависимости:
     ```bash
     pip install -r requirements.txt
     ```
 
-12. Запустить программу для сортировки и цензуры сообщений.
+11. Запустить программу для сортировки и цензуры сообщений.
     ```bash
     faust -A kafka_streams worker -l INFO
     ```
 
-13. В другом окне терминала добавить список блокировок:
+12. Добавить запрещенные слова
+
+    ```bash
+    echo '{"words": ["loh"]}' | docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic bad_words
+    echo '{"words": ["durak"]}' | docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic bad_words
+    echo '{"words": ["chert"]}' | docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic bad_words
+    ```
+
+    Списки можно менять, это просто пример.
+
+13. Добавить список блокировок:
     ```bash
     echo '{"blocker":"clown", "blocked":["dodik", "spammer"]}' | sudo docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic blocked_users
-    echo '{"blocker":"spammer", "blocked":["dodik"]}' | sudo docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic blocked_users
-    echo '{"blocker":"dodik", "blocked":["clown", "payaso"]}' | sudo docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic blocked_users
+    echo '{"blocker":"spammer", "blocked":[]}' | sudo docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic blocked_users
+    echo '{"blocker":"dodik", "blocked":["spammer", "payaso"]}' | sudo docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic blocked_users
     echo '{"blocker":"payaso", "blocked":["spammer"]}' | sudo docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic blocked_users
     ```
 
-    При таком подходе списки применятся не сразу, какое-то кол-во заблокированных проскочит. Топик блокировки читает стрим, то есть данные о списках блокировки должны поступать так СТРИМ => ТОПИК БЛОКИРОВКИ => БД.
+    Списки можно менять, это просто пример.
 
-14. Проверить *http://$server_ip:8080/ui/clusters/local/all-topics/filtered_messages/messages?keySerde=String&valueSerde=String&limit=100* 
+
+14. Проверить фильтрацию сообщений:
+
+    ```bash
+    echo '{"sender_id":228,"sender_name":"clown","recipient_id":69,"recipient_name":"dodik","amount":1.75,"content":"loh"}' | docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic messages
+    echo '{"sender_id":228,"sender_name":"dodik","recipient_id":69,"recipient_name":"payaso","amount":1.75,"content":"durak"}' | docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic messages
+    echo '{"sender_id":228,"sender_name":"payaso","recipient_id":69,"recipient_name":"spammer","amount":1.75,"content":"chert"}' | docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic messages
+    echo '{"sender_id":228,"sender_name":"clown","recipient_id":69,"recipient_name":"dodik","amount":1.75,"content":"labubu"}' | docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic messages
+    ```
+
+    Ожидаемый результат: три первый сообщения будут зацензурированы, четвертое - нет.
+
+15. Запустить генератор сообщений.
+    ```bash
+    docker compose up app -d
+    ```
+
+16. Проверить работу блокировок из пункта 13, открыв топик filtered_messages. Сообщения от отправителя spammer не доходят никому, до получателя spammer доходят сообщения от всех отправителей.
+
 
 ## Автор
 [Aliaksei Tulko](https://github.com/aleksej-tulko)
