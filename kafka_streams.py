@@ -177,8 +177,7 @@ async def add_bad_words(stream):
     async for words in stream:
         for word in words.words:
             if word not in bad_words_table['words']:
-                updated_list = bad_words_table.get('words') + words.words
-                bad_words_table['words'] = updated_list
+                bad_words_table.get('words') += words.words
                 value = bad_words_table.get('words')
                 print(value)
 
