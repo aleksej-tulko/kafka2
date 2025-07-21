@@ -174,7 +174,7 @@ async def count_frequency(stream):
 @app.agent(messages_topic)
 async def filter_messages(stream): # Отправка в отстортированные сообщения
     processed_stream = app.stream( 
-        (messages_topic & blocked_users_topic),
+        (messages_topic, blocked_users_topic),
         processors=[lower_str_input, mask_bad_words] # Обработка
     )
     async for message in processed_stream:
