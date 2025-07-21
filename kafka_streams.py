@@ -8,6 +8,7 @@ import faust
 COUNTER_INTERVAL = 45
 WINDOW_RANGE = 60
 TIME_INTERVAL = 10
+SUBST_STR = '***'
 
 
 logger = logging.getLogger(__name__)
@@ -157,7 +158,7 @@ def lower_str_input(value: Messages) -> Messages: # Перевод строк в
 
 async def mask_bad_words(value: Messages) -> Messages: # Замена запрещеных слов на ***
     if value.content in bad_words_table['words']:
-        value.content = '***' # Для работы со списком запрещенных слов
+        value.content = SUBST_STR  # Для работы со списком запрещенных слов
     value.content = re_pattern.sub('[CENSORED]', value.content) #Допфильтр: слова skam, spam, windows будут заменены на [CENSORED]
     return value
 
