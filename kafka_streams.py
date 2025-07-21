@@ -91,7 +91,7 @@ bad_words_table = app.Table( # Таблица, где постоянно хра�
     default=list,
     changelog_topic=app.topic( # При рестарте или сбое данные будут восстановлены из этого топика.
         "bad-words-changelog",
-        value_type=BadWords(word=list[str]),
+        value_type=BadWords(words=list[str]),
         partitions=2
     )
 )
