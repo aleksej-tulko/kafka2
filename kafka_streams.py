@@ -177,8 +177,6 @@ async def filter_messages(stream): # Отправка в отстортиров�
         messages_topic,
         processors=[lower_str_input, mask_bad_words] # Обработка
     )
-    async for message in processed_stream.filter(
-        lambda sender: sender.sender_name not in table[sender.recipient_name]
-    ):
+    async for message in processed_stream:
         logger.info(f'{message.recipient_name} блок {table[message.recipient_name]}')
         await filtered_messages_topic.send(value=message)
