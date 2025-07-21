@@ -182,5 +182,6 @@ async def filter_messages(stream): # Отправка в отстортиров�
     async for message in processed_stream:
         blocked = table[message.recipient_name]
         if message.sender_name in blocked:
+            print(f'{message.sender_name} в {blocked}')
             continue
         await filtered_messages_topic.send(value=message)
