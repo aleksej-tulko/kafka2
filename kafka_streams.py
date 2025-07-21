@@ -77,23 +77,13 @@ app.conf.consumer_auto_offset_reset = "earliest"
 blocked_senders_table = app.Table( # Таблица, где постоянно хранятся списки заблокированных.
     "blocked-users-table",
     partitions=1,
-    default=list,
-    changelog_topic=app.topic( # При рестарте или сбое данные будут восстановлены из этого топика.
-        "blocked-users-changelog",
-        value_type=BlockedUsers(blocker=str, blocked=list[str]),
-        partitions=1
-    )
+    default=list
 )
 
 bad_words_table = app.Table( # Таблица, где постоянно хранятся списки заблокированных.
     "bad-words-table",
     partitions=1,
-    default=list,
-    changelog_topic=app.topic( # При рестарте или сбое данные будут восстановлены из этого топика.
-        "bad-words-changelog",
-        value_type=BadWords(words=list[str]),
-        partitions=1
-    )
+    default=list
 )
 
 messages_frequency_table = app.Table( # Таблица для отслеживания кол-во сообщений за время жизни окна.
