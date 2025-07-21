@@ -175,12 +175,10 @@ def mask_bad_words(value: Messages) -> Messages: # Замена запрещен
 async def add_bad_words(stream):
     async for words in stream:
         for word in words.words:
-            print(word)
             if word not in bad_words_table['words']:
                 updated_list = bad_words_table.get('words') + words.words
                 bad_words_table['words'] = updated_list
                 value = bad_words_table.get('words')
-                print(value)
 
 
 @app.agent(blocked_users_topic, sink=[log_blocked]) # Сохранение блокировок из топика в БД.
