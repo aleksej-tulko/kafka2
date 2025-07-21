@@ -174,11 +174,10 @@ async def count_frequency(stream):
 @app.agent(messages_topic)
 async def filter_messages(stream): # Отправка в отстортированные сообщения
     processed_stream = app.stream( 
-        (messages_topic, blocked_users_topic),
+        messages_topic,
         processors=[lower_str_input, mask_bad_words] # Обработка
     )
-    async for message in processed_stream:
-        blocked_list = table[message.recipient_name]
-        if message.sender_name not in blocked_list: # Проверка цензуры. Проверка происходит несразу, данные из сначала должны попасть в messages, потом  бд, а бд должны это зафиксировать.
-            print(f'{message.recipient_name} блокирует {table[message.recipient_name]}')
-            await filtered_messages_topic.send(value=message)
+    async for message in processed_stream.filter(
+        lambda sender: sender.sender_name not in table[sender.recipient_name]
+    ):
+        await filtered_messages_topic.send(value=message)
