@@ -165,6 +165,7 @@ def lower_str_input(value: Messages) -> Messages: # Перевод строк в
 
 
 def mask_bad_words(value: Messages) -> Messages: # Замена запрещеных слов на ['CENSORED']
+    print('her')
     if value.content in bad_words_table:
         value.content == '***'
     return value
