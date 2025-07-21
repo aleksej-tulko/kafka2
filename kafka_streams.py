@@ -182,6 +182,7 @@ async def filter_messages(stream): # Отправка в отстортиров�
     )
     async for message in processed_stream:
         async for blocker in blocked_stream:
-            if message.sender_name not in blocker.blocker:
-                logger.info(f'{message.recipient_name} блок {blocker.blocker}')
-                await filtered_messages_topic.send(value=message)
+            print(message.sender_name, blocker.blocker)
+            # if message.sender_name not in blocker.blocker:
+            #     logger.info(f'{message.recipient_name} блок {blocker.blocker}')
+            #     await filtered_messages_topic.send(value=message)
