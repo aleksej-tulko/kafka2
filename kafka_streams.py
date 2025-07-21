@@ -180,5 +180,4 @@ async def filter_messages(stream): # Отправка в отстортиров�
         processors=[lower_str_input, mask_bad_words] # Обработка
     )
     async for message in processed_stream:
-        logger.info(f'{message.recipient_name} блок {table[message.recipient_name]}')
         await filtered_messages_topic.send(value=message)
