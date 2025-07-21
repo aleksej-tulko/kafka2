@@ -169,7 +169,7 @@ def mask_bad_words(value: Messages) -> Messages: # Замена запрещен
     print(bad_words_table.get('words'))
     if value.content in bad_words_table['words']:
         print(bad_words_table['words'])
-        value.content == '***'
+        value.content = '***'
     return value
 
 
