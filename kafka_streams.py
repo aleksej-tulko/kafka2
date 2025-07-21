@@ -175,6 +175,7 @@ def mask_bad_words(value: Messages) -> Messages: # Замена запрещен
 async def add_bad_words(stream):
     async for word in stream:
         if word not in bad_words_table['words']:
+            print(word)
             bad_words_table['words'].append(word)
             print(bad_words_table['words'])
 
