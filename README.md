@@ -95,9 +95,7 @@ kafka_streams фильтрует сообщения, приходящие в т�
 12. В другом окне терминала добавить запрещенные слова:
 
     ```bash
-    echo '{"words": ["loh"]}' | docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic bad_words
-    echo '{"words": ["durak"]}' | docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic bad_words
-    echo '{"words": ["chert"]}' | docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic bad_words
+    echo '{"words": ["loh", "durak", "chert"]}' | sudo docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic bad_words
     ```
 
     Списки можно менять, это просто пример.
