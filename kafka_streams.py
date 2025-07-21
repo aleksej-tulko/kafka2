@@ -45,7 +45,7 @@ class CountTimer(faust.Record):
 class BadWords(faust.Record):
     """Модель запрещенных слов с полями."""
 
-    word: list[str]
+    words: list[str]
 
 
 class BlockedUsers(faust.Record):
