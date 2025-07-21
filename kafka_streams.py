@@ -71,12 +71,7 @@ app.conf.consumer_auto_offset_reset = "earliest"
 table = app.Table( # Таблица, где постоянно хранятся списки заблокированных.
     "blocked-users-table",
     partitions=2,
-    default=list,
-    changelog_topic=app.topic( # При рестарте или сбое данные будут восстановлены из этого топика.
-        "blocked-users-changelog",
-        value_type=BlockedUsers(blocker=str, blocked=list[str]),
-        partitions=2
-    )
+    default=list
 )
 
 messages_frequency_table = app.Table( # Таблица для отслеживания кол-во сообщений за время жизни окна.
@@ -187,7 +182,7 @@ async def filter_messages(stream): # Отправка в отстортиров�
         await filtered_messages_topic.send(value=message)
 
 
-@app.timer(interval=30.0, on_leader=True)
+@app.timer(interval=10.0, on_leader=True)
 async def fake_initial_event():
     if not table['fake_block']:
         await blocked_users_topic.send(
