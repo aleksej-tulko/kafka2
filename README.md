@@ -48,27 +48,27 @@ kafka_streams фильтрует сообщения, приходящие в т�
     ```
 5. Создать папки на хосте:
     ```bash
-    mkdir -p /opt/kafka/kafka_1/
-    mkdir -p /opt/kafka/kafka_2/
-    mkdir -p /opt/kafka/kafka_3/
-    mkdir -p /opt/zookeeper/data
-    mkdir -p /opt/zookeeper/log
-    chown 1000:1000 /opt/kafka/ -R
-    chown 1000:1000 /opt/zookeeper/ -R
+    sudo mkdir -p /opt/kafka/kafka_1/
+    sudo mkdir -p /opt/kafka/kafka_2/
+    sudo mkdir -p /opt/kafka/kafka_3/
+    sudo mkdir -p /opt/zookeeper/data
+    sudo mkdir -p /opt/zookeeper/log
+    sudo chown 1000:1000 /opt/kafka/ -R
+    sudo chown 1000:1000 /opt/zookeeper/ -R
     ```
 
 6. Создать docker network:
     ```bash
-    docker network create kafka-network
+    sudo docker network create kafka-network
     ```
 
 7. Запустить сервисы:
     ```bash
-    docker compose up zookeeper kafka_1 kafka_2 kafka_3 kafka-ui
+    sudo docker compose up zookeeper kafka_1 kafka_2 kafka_3 kafka-ui -d
     ```
     При первом запуске до создания топика программу **app** запускать не надо. После создания топика при последуюший перезапусках можно использовать
     ```bash
-    docker compose up -d
+    sudo docker compose up -d
     ```
 
 8. Создать нужные топики:
@@ -76,8 +76,9 @@ kafka_streams фильтрует сообщения, приходящие в т�
     sudo docker exec -it compose-kafka_1-1 kafka-topics --create --topic filtered_messages --partitions 1 --replication-factor 2 --bootstrap-server localhost:9092 && sudo docker exec -it compose-kafka_1-1 kafka-topics --create --topic blocked_users --partitions 1 --replication-factor 2 --bootstrap-server localhost:9092 && sudo docker exec -it compose-kafka_1-1 kafka-topics --create --topic messages --partitions 1 --replication-factor 2 --bootstrap-server localhost:9092
     ```
 
-9. Создать рабочее окружение и активировать его:
+9. Спуститься обратно в директорию kafka2/ и оздать рабочее окружение и активировать его:
     ```bash
+    cd ../
     python3 -m venv venv
     source venv/bin/activate
     ```
@@ -86,12 +87,12 @@ kafka_streams фильтрует сообщения, приходящие в т�
     pip install -r requirements.txt
     ```
 
-11. Запустить программу для сортировки и цензуры сообщений.
+11. Запустить программу для сортировки и цензуры сообщений:
     ```bash
     faust -A kafka_streams worker -l INFO
     ```
 
-12. Добавить запрещенные слова
+12. В другом окне терминала добавить запрещенные слова:
 
     ```bash
     echo '{"words": ["loh"]}' | docker exec -i compose-kafka_1-1 kafka-console-producer --broker-list localhost:9092 --topic bad_words
@@ -125,7 +126,7 @@ kafka_streams фильтрует сообщения, приходящие в т�
 
 15. Запустить генератор сообщений.
     ```bash
-    docker compose up app -d
+    sudo docker compose up app -d
     ```
 
 16. Проверить работу блокировок из пункта 13, открыв топик filtered_messages. Сообщения от отправителя spammer не доходят никому, до получателя spammer доходят сообщения от всех отправителей.
