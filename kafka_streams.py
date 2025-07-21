@@ -171,7 +171,7 @@ async def count_frequency(stream):
         yield (message.sender_name, delta_change) # Вызов логгера
 
 
-@app.agent(messages_topic, blocked_users_topic)
+@app.agent([messages_topic, blocked_users_topic])
 async def test(stream):
     async for event in stream:
         print(event)
